@@ -12,6 +12,7 @@ library(shiny)
 library(bslib)
 library(ggplot2)
 library(gitlink)
+library(DT)
 
 ui <- page_navbar(
   
@@ -59,7 +60,8 @@ ui <- page_navbar(
       
       navset_card_underline(
         title = "Simulation Results:",
-        nav_panel("MPC Values Individually", plotOutput("GmultPlot")),
+        nav_panel("MPC Values Individually (Figure)", plotOutput("GmultPlot")),
+        nav_panel("MPC Values Individually (Table)", DTOutput("GmultTable")),
         nav_panel("Interacting MPC Values", plotOutput("GaggPlot")),
         full_screen = TRUE
       ),
@@ -107,7 +109,8 @@ ui <- page_navbar(
       
       navset_card_underline(
         title = "Simulation Results:",
-        nav_panel("MPC Values Individually", plotOutput("TmultPlot")),
+        nav_panel("MPC Values Individually (Figure)", plotOutput("TmultPlot")),
+        nav_panel("MPC Values Individually (Table)", DTOutput("TmultTable")),
         nav_panel("Interacting MPC Values", plotOutput("TaggPlot")),
         full_screen = TRUE
       ),
@@ -167,7 +170,8 @@ ui <- page_navbar(
       
       navset_card_underline(
         title = "Simulation Results:",
-        nav_panel("MPC Values Individually", plotOutput("BmultPlot")),
+        nav_panel("MPC Values Individually (Figure)", plotOutput("BmultPlot")),
+        nav_panel("MPC Values Individually (Table)", DTOutput("BmultTable")),
         nav_panel("Interacting MPC Values", plotOutput("BaggPlot")),
         full_screen = TRUE
       ),
@@ -204,11 +208,11 @@ server <- function(input, output) {
   
   # Government Spending Results:
   output$GMULT1 <- renderText({ 
-    glue::glue("{round(1/(1 - input$MPC1),2)}")
+    glue::glue("{round(1/(1 - input$MPC1),4)}")
   })
   
   output$GMULT2 <- renderText({ 
-    glue::glue("{round(1/(1 - input$MPC2),2)}") 
+    glue::glue("{round(1/(1 - input$MPC2),4)}") 
   })
   
   output$GmultPlot <- renderPlot({
@@ -267,6 +271,30 @@ server <- function(input, output) {
     
   }) # end Gmultplot
   
+  output$GmultTable <- renderDT({
+  
+  MULT1 <- 1 / (1 - input$MPC1)
+  G1 = input$DELTG
+  G1sum = input$DELTG
+  
+  MULT2 <- 1 / (1 - input$MPC2)
+  G2 = input$DELTG
+  G2sum = input$DELTG
+  
+  ROUNDS = 100
+  RVEC = 1:ROUNDS
+  
+  for (i in 2:ROUNDS){
+    G1 <- append(G1,G1[i-1] * input$MPC1)
+    G1sum <- append(G1sum,sum(G1))
+    G2 <- append(G2,G2[i-1] * input$MPC2)
+    G2sum <- append(G2sum,sum(G2))
+  }
+  
+  datatable(data.frame(round(G1,4),round(G1sum,4),round(G2,4),round(G2sum,4)),
+            colnames = c("Round Spending with MPC\U2081", "Cumulated Spending with MPC\U2081", "Round Spending with MPC\U2082", "Cumulated Spending with MPC\U2082"))
+  })
+  
   output$GaggPlot <- renderPlot({
     
     MPC1 <- input$MPC1
@@ -320,11 +348,11 @@ server <- function(input, output) {
   
   # Taxation Results:
   output$TMULT1 <- renderText({ 
-    glue::glue("{round(-input$TMPC1/(1 - input$TMPC1),2)}")
+    glue::glue("{round(-input$TMPC1/(1 - input$TMPC1),4)}")
   })
   
   output$TMULT2 <- renderText({ 
-    glue::glue("{round(-input$TMPC2/(1 - input$TMPC2),2)}") 
+    glue::glue("{round(-input$TMPC2/(1 - input$TMPC2),4)}") 
   })
   
   output$TmultPlot <- renderPlot({
@@ -383,6 +411,31 @@ server <- function(input, output) {
     
   }) # end Tmultplot
   
+  output$TmultTable <- renderDT({
+    
+    TMULT1 <- -input$TMPC1 / (1 - input$TMPC1)
+    T1 = -input$DELTT * input$TMPC1
+    T1sum = -input$DELTT * input$TMPC1
+    
+    TMULT2 <- -input$TMPC2 / (1 - input$TMPC2)
+    T2 = -input$DELTT * input$TMPC2
+    T2sum = -input$DELTT * input$TMPC2
+    
+    ROUNDS = 100
+    RVEC = 1:ROUNDS
+    
+    for (i in 2:ROUNDS){
+      T1 <- append(T1,T1[i-1] * input$TMPC1)
+      T1sum <- append(T1sum,sum(T1))
+      T2 <- append(T2,T2[i-1] * input$TMPC2)
+      T2sum <- append(T2sum,sum(T2))
+    }
+    
+    datatable(data.frame(round(T1,4),round(T1sum,4),round(T2,4),round(T2sum,4)),
+              colnames = c("Round Spending with MPC\U2081", "Cumulated Spending with MPC\U2081", "Round Spending with MPC\U2082", "Cumulated Spending with MPC\U2082"))
+    
+  })
+  
   output$TaggPlot <- renderPlot({
     
     TMPC1 <- input$TMPC1
@@ -436,11 +489,11 @@ server <- function(input, output) {
 
   # Both Results
   output$BGMULT1 <- renderText({ 
-    glue::glue("{round(1/(1 - input$BMPC1),2)}")
+    glue::glue("{round(1/(1 - input$BMPC1),4)}")
   })
   
   output$BTMULT1 <- renderText({ 
-    glue::glue("{round(-input$BMPC1/(1 - input$BMPC1),2)}")
+    glue::glue("{round(-input$BMPC1/(1 - input$BMPC1),4)}")
   })
   
   output$BGMULT2 <- renderText({ 
@@ -506,6 +559,31 @@ server <- function(input, output) {
     p1 + theme_gray(base_size = 18)
     
   }) # end Bmultplot
+  
+  output$BmultTable <- renderDT({
+    
+    BTOT1 <- 1 / (1 - input$BMPC1) * input$BDELTG - input$BMPC1 / (1 - input$BMPC1) * input$BDELTT
+    B1 = input$BDELTG - input$BMPC1 * input$BDELTT
+    B1sum = B1
+    
+    BTOT2 <- 1 / (1 - input$BMPC2) * input$BDELTG - input$BMPC2 / (1 - input$BMPC2) * input$BDELTT
+    B2 = input$BDELTG - input$BMPC2 * input$BDELTT
+    B2sum = B2
+    
+    ROUNDS = 100
+    RVEC = 1:ROUNDS
+    
+    for (i in 2:ROUNDS){
+      B1 <- append(B1,B1[i-1] * input$BMPC1)
+      B1sum <- append(B1sum,sum(B1))
+      B2 <- append(B2,B2[i-1] * input$BMPC2)
+      B2sum <- append(B2sum,sum(B2))
+    }
+    
+    datatable(data.frame(round(B1,4),round(B1sum,4),round(B2,4),round(B2sum,4)),
+              colnames = c("Round Spending with MPC\U2081", "Cumulated Spending with MPC\U2081", "Round Spending with MPC\U2082", "Cumulated Spending with MPC\U2082"))
+    
+  })
   
   output$BaggPlot <- renderPlot({
     

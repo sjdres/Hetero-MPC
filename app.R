@@ -10,7 +10,8 @@
 # Load packages used by the app. Install when needed:
 library(shiny)
 library(bslib)
-library(ggplot2)
+library(plotly)
+library(ggiraph)
 library(gitlink)
 library(DT)
 
@@ -30,9 +31,9 @@ ui <- page_navbar(
         tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar, .js-irs-3 .irs-handle {background: green} .js-irs-3 .irs-handle {background: green !important;} .js-irs-3 .irs-handle:active {background: green !important;}")),
         
         tags$h6(HTML("Choose Simulation Criteria:")),
-        sliderInput("DELTG", label = HTML("&Delta;G (Millions):"), min = -1, max = 1, value = 0, step = 0.5),
+        sliderInput("DELTG", label = HTML("&Delta;G (Millions):"), min = -1, max = 1, value = 0, step = 1),
         sliderInput("MPC1", label = HTML("MPC<sub>1</sub>:"), min = 0, max = 0.99, value = 0.50, step = 0.01),
-        sliderInput("MPC2", label = HTML("MPC<sub>2</sub>:"), min = 0, max = 0.99, value = 0.50, step = 0.01),
+        sliderInput("MPC2", label = HTML("MPC<sub>2</sub>:"), min = 0, max = 0.99, value = 0, step = 0.01),
         sliderInput("P2", label = HTML("% of Population with MPC<sub>2</sub>:"), min = 0, max = 100, value = 50, step = 5),
         p("(Dressler and Reed, 2025)")
       ), # end sidebar
@@ -60,7 +61,8 @@ ui <- page_navbar(
       
       navset_card_underline(
         title = "Simulation Results:",
-        nav_panel("MPC Values Individually (Figure)", plotOutput("GmultPlot")),
+        nav_panel("MPC Values Individually (Figure)", plotlyOutput("GmultPlot")),
+        nav_panel("MPC Values Individually (TEST)", plotlyOutput("GPlot")),
         nav_panel("MPC Values Individually (Table)", DTOutput("GmultTable")),
         nav_panel("Interacting MPC Values", plotOutput("GaggPlot")),
         full_screen = TRUE
@@ -207,49 +209,80 @@ ui <- page_navbar(
 server <- function(input, output) {
   
   # Government Spending Results:
-  output$GMULT1 <- renderText({ 
-    glue::glue("{round(1/(1 - input$MPC1),4)}")
+  reactive_MPC1  <- reactive({ input$MPC1 })
+  reactive_MPC2  <- reactive({ input$MPC2 })
+  reactive_DELTG <- reactive({ input$DELTG })
+  reactive_P2    <- reactive({ input$P2 })
+  
+  output$GMULT1 <- renderText({
+    glue::glue("{round(1/(1 - reactive_MPC1()),4)}")
   })
   
   output$GMULT2 <- renderText({ 
-    glue::glue("{round(1/(1 - input$MPC2),4)}") 
+    glue::glue("{round(1/(1 - reactive_MPC2()),4)}") 
   })
   
-  output$GmultPlot <- renderPlot({
+  output$GmultPlot <- renderPlotly({
     
-    MULT1 <- 1 / (1 - input$MPC1)
-    G1 = input$DELTG
-    G1sum = input$DELTG
+    MPC1 <- reactive_MPC1()
+    MPC2 <- reactive_MPC2()
+    DELTG <- reactive_DELTG()
     
-    MULT2 <- 1 / (1 - input$MPC2)
-    G2 = input$DELTG
-    G2sum = input$DELTG
+    MULT1 <- 1 / (1 - MPC1)
+    G1 = DELTG
+    G1sum = DELTG
+    
+    MULT2 <- 1 / (1 - MPC2)
+    G2 = DELTG
+    G2sum = DELTG
     
     ROUNDS = 20
     RVEC = 1:ROUNDS
     
     for (i in 2:ROUNDS){
-      G1 <- append(G1,G1[i-1] * input$MPC1)
+      G1 <- append(G1,G1[i-1] * MPC1)
       G1sum <- append(G1sum,sum(G1))
-      G2 <- append(G2,G2[i-1] * input$MPC2)
+      G2 <- append(G2,G2[i-1] * MPC2)
       G2sum <- append(G2sum,sum(G2))
     }
     
     DF <- data.frame(RVEC,G1,G1sum,G2,G2sum)
     
     p1 <- ggplot(DF,aes(x=RVEC)) +
-      geom_segment(x = 1, y = 0, xend = 1, yend = input$DELTG, color = "black") +
-      geom_line(aes(y=G1sum, color = "Cumulative Spending with MPC1"),linewidth = 2) +
-      geom_point(aes(y=G1sum, color = "Cumulative Spending with MPC1"),size = 4) +
-      geom_point(aes(y=G1, color = "Round Spending with MPC1"), size = 4) +
-      geom_line(aes(y=G1, color = "gray"),linetype = 2) +
-      geom_hline(yintercept=MULT1*input$DELTG,linetype="dashed",color="black") +
-      geom_line(aes(y=G2sum, color = "Cumulative Spending with MPC2"),linewidth = 2) +
-      geom_point(aes(y=G2sum, color = "Cumulative Spending with MPC2"),size = 4) +
-      geom_point(aes(y=G2, color = "Round Spending with MPC2"), size = 4) +
-      geom_line(aes(y=G2, color = "gray"),linetype = 2) +
-      geom_hline(yintercept=MULT2*input$DELTG,linetype="dashed",color="black") +
-      labs(title = "Total and Individual Spending",
+      geom_segment(x = 1, y = 0, xend = 1, yend = DELTG, color = "black") +
+      
+      geom_line(aes(y=G1sum, color = "Cumulative Spending with MPC1"),linewidth = 1) +
+      suppressWarnings(geom_point(aes(y=G1sum, x = RVEC, color = "Cumulative Spending with MPC1", 
+                     text = paste("Cumulative Spending: ", round(G1sum,2), "<br>", "Spending Round: ", RVEC, "<br>")), 
+                 size = 2)) +
+      
+      geom_line(aes(y=G1),linetype = 2, color = "gray") +
+      suppressWarnings(geom_point(aes(y=G1, color = "Round Spending with MPC1",
+                     text = paste("Individual Spending: ", round(G1,2), "<br>", "Spending Round: ", RVEC, "<br>")),
+                 size = 2)) +
+      
+      suppressWarnings(geom_hline(aes(yintercept=MULT1*input$DELTG,
+                                 text = paste("Cumulative Multiplier Effect")),
+                                 linetype="dashed",color="black")) +
+      
+      geom_line(aes(y=G2sum, color = "Cumulative Spending with MPC2"),linewidth = 1) +
+      suppressWarnings(geom_point(aes(y=G2sum, color = "Cumulative Spending with MPC2", 
+                                      text = paste("Cumulative Spending: ", round(G2sum,2), "<br>", "Spending Round: ", RVEC, "<br>"))
+                                  ,size = 2)) +
+      
+      geom_line(aes(y=G2),linetype = 2, color = "gray") +
+      suppressWarnings(geom_point(aes(y=G2, color = "Round Spending with MPC2", 
+                     text = paste("Individual Spending: ", round(G2,2), "<br>", "Spending Round: ", RVEC, "<br>"))
+                 , size = 2)) +
+      
+      suppressWarnings(geom_hline(aes(yintercept=MULT2*input$DELTG, 
+                                      text = paste("Cumulative Multiplier Effect")),
+                                      linetype="dashed", color="black")) +
+      suppressWarnings(geom_point(aes(y = DELTG, x = 1,
+                                      text = paste("Initial Government Spending")), 
+                                  color = "black")) + 
+      
+      labs(title = "Cumulative and Individual Spending",
            x = "Spending Rounds", y = "Dollars (Millions)"
       ) + 
       scale_color_manual(breaks=c('Cumulative Spending with MPC1',
@@ -269,7 +302,111 @@ server <- function(input, output) {
     
     p1 + theme_gray(base_size = 18)
     
+    #girafe(ggobj = p1,
+    #       width_svg = 12, 
+    #       height_svg = 6,
+    #       options = list(opts_tooltip(use_fill = TRUE)))
+    
+    ggplotly(p1, tooltip = "text")  %>% config(displayModeBar = FALSE)
+    
   }) # end Gmultplot
+  
+  #################################################
+  # TEST...
+  
+  output$GPlot <- renderPlotly({
+    
+    MPC1 <- reactive_MPC1()
+    MPC2 <- reactive_MPC2()
+    DELTG <- reactive_DELTG()
+    
+    MULT1 <- 1 / (1 - MPC1)
+    MULT2 <- 1 / (1 - MPC2)
+    
+    ROUNDS = 20
+    RVEC = 1:ROUNDS
+    
+    G1 <- DELTG * MPC1^(0:(ROUNDS-1))
+    G1sum <- cumsum(G1)
+    G2 <- DELTG * MPC2^(0:(ROUNDS-1))
+    G2sum <- cumsum(G2)
+    
+    DF <- data.frame(RVEC,G1,G1sum,G2,G2sum)
+    
+    fig <- plot_ly(DF, x = ~RVEC, y = ~G1sum, type = 'scatter', mode = 'lines+markers',
+                   name = 'Cumulative Spending with MPC<sub>1</sub>',
+                   line = list(color = 'blue', width = 2, dash = 'solid'),
+                   marker = list(color = 'blue', size = 10),
+                   hovertemplate = '<b>Cumulative Spending with MPC<sub>1</sub>:</b> %{y:$,.4f} million<extra></extra>')
+    fig <- fig %>% add_trace(y = ~G1, mode = 'lines+markers',
+                             name = 'Round Spending with MPC<sub>1</sub>',
+                             line = list(color = 'grey', width = 1, dash = 'dash'),
+                             marker = list(color = 'darkblue', size = 10),
+                             hovertemplate = '<b>Round Spending with MPC<sub>1</sub>:</b> %{y:$,.4f} million<extra></extra>')
+       
+    if (MPC2 != 0) {
+      fig <- fig %>% add_trace(y = ~G2sum, mode = 'lines+markers',
+                               name = 'Cumulative Spending with MPC<sub>2</sub>',
+                               line = list(color = 'red', width = 2, dash = 'solid'),
+                               marker = list(color = 'red', size = 10),
+                               hovertemplate = '<b>Cumulative Spending with MPC<sub>2</sub>:</b> %{y:$,.4f} million<extra></extra>')
+      fig <- fig %>% add_trace(y = ~G2,  mode = 'lines+markers',
+                               name = 'Round Spending with MPC<sub>1</sub>',
+                               line = list(color = 'grey', width = 1, dash = 'dash'),
+                               marker = list(color = 'darkred', size = 10),
+                               hovertemplate = '<b>Round Spending with MPC<sub>2</sub>:</b> %{y:$,.4f} million<extra></extra>')
+      fig <- fig %>%
+        layout(shapes = list(
+          list(
+            type = "line",
+            x0 = 0,
+            x1 = 21,
+            y0 = MULT2*DELTG,
+            y1 = MULT2*DELTG,
+            line = list(color = 'black', width = 1, dash = "dash")),
+          list(
+            type = "line",
+            x0 = 0,
+            x1 = 21,
+            y0 = MULT1*DELTG,
+            y1 = MULT1*DELTG,
+            line = list(color = 'black', width = 1, dash = "dash"))
+          ))
+    }
+    
+    fig <- fig %>%
+      layout(hovermode = 'x unified',
+                    paper_bgcolor='rgb(255,255,255)', plot_bgcolor='rgb(229,229,229)',
+                    xaxis = list(title = "Spending Round",
+                                 gridcolor = 'white',
+                                 showgrid = TRUE,
+                                 showline = FALSE,
+                                 showticklabels = TRUE,
+                                 tickcolor = 'lightgrey',
+                                 ticks = 'outside',
+                                 zeroline = FALSE),
+                    yaxis = list(title = "Dollars (millions)",
+                                 gridcolor = 'white',
+                                 showgrid = TRUE,
+                                 showline = FALSE,
+                                 showticklabels = TRUE,
+                                 tickcolor = 'lightgrey',
+                                 ticks = 'outside',
+                                 zeroline = TRUE),
+             shapes = list(
+               list(
+                 type = "line",
+                 x0 = 0,
+                 x1 = 21,
+                 y0 = MULT1*DELTG,
+                 y1 = MULT1*DELTG,
+                 line = list(color = 'black', width = 1, dash = "dash"))))
+    fig
+    
+  }) # end Gmultplot
+  
+  
+  #################################################
   
   output$GmultTable <- renderDT({
   

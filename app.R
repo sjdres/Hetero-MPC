@@ -18,7 +18,7 @@ ui <- page_navbar(
   
   theme = bs_theme(version = 5),
   
-  title = "Spending Multipliers",
+  title = "The Multiplier Effect: An Application",
   
   nav_panel(
     title = 'Government Spending',
@@ -33,8 +33,8 @@ ui <- page_navbar(
         sliderInput("DELTG", label = HTML("&Delta;G (Millions):"), min = -1, max = 1, value = 1, step = 1),
         sliderInput("MPC1", label = HTML("MPC<sub>1</sub>:"), min = 0, max = 0.99, value = 0.50, step = 0.01),
         sliderInput("MPC2", label = HTML("MPC<sub>2</sub>:"), min = 0, max = 0.99, value = 0, step = 0.01),
-        sliderInput("P2", label = HTML("% of Population with MPC<sub>2</sub>:"), min = 0, max = 100, value = 50, step = 5),
-        p("(Dressler and Reed, 2025)")
+        sliderInput("P2", label = HTML("% of Population with MPC<sub>2</sub>:"), min = 0, max = 100, value = 50, step = 5)
+        #p("(Dressler and Reed, 2025)")
       ), # end sidebar
       
       # main window cards
@@ -82,8 +82,8 @@ ui <- page_navbar(
         sliderInput("DELTT", label = HTML("&Delta;T (millions):"), min = -1, max = 1, value = -1, step = 1),
         sliderInput("TMPC1", label = HTML("MPC<sub>1</sub>:"), min = 0, max = 0.99, value = 0.50, step = 0.01),
         sliderInput("TMPC2", label = HTML("MPC<sub>2</sub>:"), min = 0, max = 0.99, value = 0, step = 0.01),
-        sliderInput("TP2", label = HTML("% of Population with MPC<sub>2</sub>:"), min = 0, max = 100, value = 50, step = 5),
-        p("(Dressler and Reed, 2025)")
+        sliderInput("TP2", label = HTML("% of Population with MPC<sub>2</sub>:"), min = 0, max = 100, value = 50, step = 5)
+        #p("(Dressler and Reed, 2025)")
       ), # end sidebar
       
       # main window cards
@@ -133,8 +133,8 @@ ui <- page_navbar(
         sliderInput("BDELTT", label = HTML("&Delta;T (millions):"), min = -1, max = 1, value = 0, step = 0.5),
         sliderInput("BMPC1", label = HTML("MPC<sub>1</sub>:"), min = 0, max = 0.99, value = 0.50, step = 0.01),
         sliderInput("BMPC2", label = HTML("MPC<sub>2</sub>:"), min = 0, max = 0.99, value = 0, step = 0.01),
-        sliderInput("BP2", label = HTML("% of Population with MPC<sub>2</sub>:"), min = 0, max = 100, value = 50, step = 5),
-        p("(Dressler and Reed, 2025)")
+        sliderInput("BP2", label = HTML("% of Population with MPC<sub>2</sub>:"), min = 0, max = 100, value = 50, step = 5)
+        #p("(Dressler and Reed, 2025)")
       ), # end sidebar
       
       # main window cards
@@ -191,11 +191,12 @@ ui <- page_navbar(
                   tags$li(HTML("Select the percentage of population that have MPC<sub>2</sub> (the remainder having MPC<sub>1</sub>)."))
                   ),
                p(em("Value Boxes"),HTML(": report the size of the multiplier for each marginal propensity to consume given (MPC<sub>1</sub> or MPC<sub>2</sub>)" )),
-               p("The ", em("MPC Values Individually"), " panel illustrates spending for each MPC (detailed in step 3) as well as the accumulated spending observed over several spending rounds.")), 
+               p("The ", em("MPC Values Individually (Figure)"), " panel illustrates spending for each MPC (detailed in step 3) as well as the accumulated spending observed over several spending rounds."), 
+               p("The ", em("MPC Values Individually (Table)"), " panel illustrates the same information as in the previous panel in table form."), 
                p("The ", em("Interacting MPC Values"),HTML( " panel illustrates total spending for each round when the change in income is received by a person in the economy with either MPC<sub>2</sub> (with probability given in step 4) or MPC<sub>1</sub> (otherwise). 
-                    The simulation is run 1000 times. The black line illustrates the average spending across all simulations, while the green band illustrates the range of spending paths from 90% of all observed simulation outcomes.")
+                    The simulation is run 1000 times. The black line illustrates the average spending across all simulations, while the green band illustrates the range of spending paths from 90% of all observed simulation outcomes."))
               ),
-      card_footer("Dressler and Reed (2025)"),
+      #card_footer("Dressler and Reed (2025)"),
       fill = FALSE
     )
   )
@@ -325,7 +326,7 @@ server <- function(input, output) {
     MULT1 <- 1 / (1 - MPC1)
     MULT2 <- 1 / (1 - MPC2)
     
-    ROUNDS = 20
+    ROUNDS = 100
     RVEC = 1:ROUNDS
     
     G1 <- DELTG * MPC1^(0:(ROUNDS-1))
@@ -763,7 +764,7 @@ server <- function(input, output) {
     BTOT2 <- 1 / (1 - BMPC2) * BDELTG - BMPC2 / (1 - BMPC2) * BDELTT
     B2i = BDELTG - BMPC2 * BDELTT
     
-    ROUNDS = 20
+    ROUNDS = 100
     RVEC = 1:ROUNDS
     
     B1 <- B1i * BMPC1^(0:(ROUNDS-1))

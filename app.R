@@ -16,54 +16,105 @@ library(DT)
 
 ui <- page_navbar(
   
-  theme = bs_theme(version = 5),
+  theme = bs_theme(version = 5, bootswatch = "cosmo"),
   
   title = "The Multiplier Effect: An Application",
   
+  ######################################################################
+  # Instructions:
+  nav_panel(
+    title = 'Instructions',
+    card(
+      height = 700,
+      card_header(class = "bg-dark","Instructions"),
+      card_body(p("This app illustrates the broad range of potential impacts of spending and tax / transfer multipliers in an aggregate economy."),
+                tags$h4(HTML("Step 1: Select the type(s) of Fiscal Policy Change(s) from the above menu:")),
+                tags$ol(
+                  tags$li(HTML("A change in Government Purchases (&Delta;G)")),
+                  tags$li(HTML("A change in Taxation or Transfer Payments (&Delta;T)")),
+                  tags$li(HTML("A change in both Government Purchases and Taxation or Transfer Payments (&Delta;G and &Delta;T)"))
+                ),
+                tags$h4(HTML("Step 2: Select the following Simulation Criteria:")),
+                p("The default is that there is only 1 household type in the economy (Type 1)"),
+                tags$ol(
+                  tags$li(HTML("The size of the policy change (in millions of dollars)")),
+                  tags$li(HTML("The marginal income tax rate: MTR")),
+                  tags$li(HTML("The marginal propensity to save: MPS<sub>1</sub>")),
+                  tags$li(HTML("The marginal propensity to import: MPI<sub>1</sub>")),
+                  tags$li(HTML("The marginal propensity to consume (domestic goods & services) is given by: MPC<sub>1</sub> = 1 - MTR - MPS<sub>1</sub> - MPI<sub>1</sub>")),
+                ),
+                tags$h4(HTML("Step 3: (Optional) Allow for a second household type that can differ in their marginal propensities:")),
+                tags$ol(
+                  tags$li(HTML("Select the percentage of the population for the Type 2 households")),
+                  tags$li(HTML("Select marginal propensities for the Type 2 household (assuming the same MTR across households)"))
+                  ),
+                tags$h4(HTML("Step 4: Explore the results of the simulation:")),
+                tags$ol(
+                  tags$li("The ", em("MPC Values Individually (Figure)"), " panel illustrates spending for each household type as well as the accumulated spending observed over several spending rounds."), 
+                  tags$li("The ", em("MPC Values Individually (Table)"), " panel illustrates the same information as in the previous panel in table form."), 
+                  tags$li(em("Value Boxes"),HTML(": report the size of the individual multipliers for each household type provided" )),
+                  tags$li("The ", em("Interacting MPC Values"),HTML( " panel illustrates total spending for each round when the change in income is received by either a Type 2 household (with probability equal to the percentage of population) or a Type 1 household (otherwise). 
+                    The simulation is run 1000 times. The black line illustrates the average spending across all simulations, while the purple band illustrates the range of spending paths from 90% of all observed simulation outcomes.")),
+                ),
+      ),
+      card_footer("XXX and XXX (XXXX) [Link to Paper]"),
+      fill = FALSE
+    )
+  ), # end nav_panel (Instructions)
+  ####################################################################
+  # Government Spending:
   nav_panel(
     title = 'Government Spending',
     page_sidebar(
+      
       sidebar = sidebar(
-        tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar, .js-irs-0 .irs-handle {background: gray} .js-irs-0 .irs-handle {background: gray !important;} .js-irs-0 .irs-handle:active {background: gray !important;}")),
-        tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar, .js-irs-1 .irs-handle {background: blue} .js-irs-1 .irs-handle {background: blue !important;} .js-irs-1 .irs-handle:active {background: blue !important;}")),
-        tags$style(HTML(".js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar, .js-irs-2 .irs-handle {background: red} .js-irs-2 .irs-handle {background: red !important;} .js-irs-2 .irs-handle:active {background: red !important;}")),
-        tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar, .js-irs-3 .irs-handle {background: green} .js-irs-3 .irs-handle {background: green !important;} .js-irs-3 .irs-handle:active {background: green !important;}")),
+        tags$h4(HTML("Simulation Criteria:")),
+        numericInput("DELTG", label = HTML("&Delta;G (Millions):"), min = -1000, max = 1000, value = 0, step = 1, width = 100),
+        sliderInput("MTR", label = HTML("MTR (%):"), min = 0, max = 100, value = 0, step = 1, width = 225),
+        hr(),
         
-        tags$h6(HTML("Choose Simulation Criteria:")),
-        sliderInput("DELTG", label = HTML("&Delta;G (Millions):"), min = -1, max = 1, value = 1, step = 1),
-        sliderInput("MPC1", label = HTML("MPC<sub>1</sub>:"), min = 0, max = 0.99, value = 0.50, step = 0.01),
-        sliderInput("MPC2", label = HTML("MPC<sub>2</sub>:"), min = 0, max = 0.99, value = 0, step = 0.01),
-        sliderInput("P2", label = HTML("% of Population with MPC<sub>2</sub>:"), min = 0, max = 100, value = 50, step = 5)
-        #p("(Dressler and Reed, 2025)")
-      ), # end sidebar
+        tags$h5(HTML("Type 1 Households:")),
+        sliderInput("MPS1", label = HTML("MPS<sub>1</sub>:"), min = 0, max = 1, value = 0.50, step = 0.01, ticks = FALSE, width = 225),
+        sliderInput("MPI1", label = HTML("MPI<sub>1</sub>:"), min = 0, max = 1, value = 0.50, step = 0.01, ticks = FALSE, width = 225),
+        tags$h6(HTML("MPC<sub>1</sub>: 1 - MTR - MPS<sub>1</sub> - MPI<sub>1</sub> = "), uiOutput("MPC1t", inline = TRUE)),
+        hr(),
+        
+        tags$h5(HTML("Type 2 Households (Optional):")),
+        sliderInput("P2", label = HTML("% of Type-2 Population:"), min = 0, max = 100, value = 0, step = 5, width = 225),
+        sliderInput("MPS2", label = HTML("MPS<sub>2</sub>:"), min = 0, max = 1, value = 0.50, step = 0.01, ticks = FALSE, width = 225),
+        sliderInput("MPI2", label = HTML("MPI<sub>2</sub>:"), min = 0, max = 1, value = 0.50, step = 0.01, ticks = FALSE, width = 225),
+        tags$h6(HTML("MPC<sub>2</sub>: 1 - MTR - MPS<sub>2</sub> - MPI<sub>2</sub> = "), uiOutput("MPC2t", inline = TRUE)),
+        
+        width = "300px"
+        
+        ), # end sidebar
       
       # main window cards
+      
+      navset_card_underline(
+        full_screen = TRUE,
+        title = "Simulation Results:",
+        nav_panel("MPC Values Individually (Figure)", plotlyOutput("GPlot")),
+        nav_panel("MPC Values Individually (Table)", DTOutput("GmultTable")),
+        nav_panel("Interacting MPC Values", plotlyOutput("GAPlot")),
+       ),
+      
       layout_column_wrap(
         value_box( 
-          tags$h1(HTML("Government Spending Multiplier with MPC<sub>1</sub>:")),
-          tags$h6(HTML("Equation: <sup>1</sup>&frasl;<sub>(1 - MPC<sub>1</sub>)</sub>")),
+          tags$h1(HTML("Multiplier with MPC<sub>1</sub>: <sup>1</sup>&frasl;<sub>(1 - MPC<sub>1</sub>)</sub>")),
           showcase = icon("sack-dollar"),
           value = uiOutput("GMULT1", inline = TRUE),
           theme = "bg-gradient-blue-red"
         ), 
         value_box( 
-          tags$h1(HTML("Government Spending Multiplier with MPC<sub>2</sub>:")), 
-          tags$h6(HTML("Equation: <sup>1</sup>&frasl;<sub>(1 - MPC<sub>2</sub>)</sub>")),
+          tags$h1(HTML("Multiplier with MPC<sub>2</sub>: <sup>1</sup>&frasl;<sub>(1 - MPC<sub>2</sub>)</sub>")), 
           showcase = icon("sack-dollar"), 
           value = uiOutput("GMULT2", inline = TRUE),
           theme = "bg-gradient-red-blue"
-        ), 
+        ),
         fill = FALSE,
-        width = '300px',
-        min_height = '100px'
-      ),
-      
-      navset_card_underline(
-        title = "Simulation Results:",
-        nav_panel("MPC Values Individually (Figure)", plotlyOutput("GPlot")),
-        nav_panel("MPC Values Individually (Table)", DTOutput("GmultTable")),
-        nav_panel("Interacting MPC Values", plotlyOutput("GAPlot")),
-        full_screen = TRUE
+        width = "300px",
+        height = "100px"
       ),
       
     ) # end page_sidebar
@@ -71,155 +122,107 @@ ui <- page_navbar(
   
   nav_panel(
     title = 'Taxation',
-    page_sidebar(
-      sidebar = sidebar(
-        tags$style(HTML(".js-irs-4 .irs-single, .js-irs-4 .irs-bar-edge, .js-irs-4 .irs-bar, .js-irs-4 .irs-handle {background: gray} .js-irs-4 .irs-handle {background: gray !important;} .js-irs-4 .irs-handle:active {background: gray !important;}")),
-        tags$style(HTML(".js-irs-5 .irs-single, .js-irs-5 .irs-bar-edge, .js-irs-5 .irs-bar, .js-irs-5 .irs-handle {background: blue} .js-irs-5 .irs-handle {background: blue !important;} .js-irs-5 .irs-handle:active {background: blue !important;}")),
-        tags$style(HTML(".js-irs-6 .irs-single, .js-irs-6 .irs-bar-edge, .js-irs-6 .irs-bar, .js-irs-6 .irs-handle {background: red} .js-irs-6 .irs-handle {background: red !important;} .js-irs-6 .irs-handle:active {background: red !important;}")),
-        tags$style(HTML(".js-irs-7 .irs-single, .js-irs-7 .irs-bar-edge, .js-irs-7 .irs-bar, .js-irs-7 .irs-handle {background: green} .js-irs-7 .irs-handle {background: green !important;} .js-irs-7 .irs-handle:active {background: green !important;}")),
-        
-        tags$h6(HTML("Choose Simulation Criteria:")),
-        sliderInput("DELTT", label = HTML("&Delta;T (millions):"), min = -1, max = 1, value = -1, step = 1),
-        sliderInput("TMPC1", label = HTML("MPC<sub>1</sub>:"), min = 0, max = 0.99, value = 0.50, step = 0.01),
-        sliderInput("TMPC2", label = HTML("MPC<sub>2</sub>:"), min = 0, max = 0.99, value = 0, step = 0.01),
-        sliderInput("TP2", label = HTML("% of Population with MPC<sub>2</sub>:"), min = 0, max = 100, value = 50, step = 5)
-        #p("(Dressler and Reed, 2025)")
-      ), # end sidebar
-      
-      # main window cards
-      layout_column_wrap(
-        value_box( 
-          tags$h1(HTML("Tax Multiplier with MPC<sub>1</sub>:")),
-          tags$h6(HTML("Equation: <sup>-MPC<sub>1</sub></sup>&frasl;<sub>(1 - MPC<sub>1</sub>)</sub>")),
-          showcase = icon("sack-dollar"),
-          value = uiOutput("TMULT1", inline = TRUE),
-          theme = "bg-gradient-blue-red"
-        ), 
-        value_box( 
-          tags$h1(HTML("Tax Multiplier with MPC<sub>2</sub>:")), 
-          tags$h6(HTML("Equation: <sup>-MPC<sub>2</sub></sup>&frasl;<sub>(1 - MPC<sub>2</sub>)</sub>")),
-          showcase = icon("sack-dollar"), 
-          value = uiOutput("TMULT2", inline = TRUE),
-          theme = "bg-gradient-red-blue"
-        ), 
-        fill = FALSE,
-        width = '300px',
-        min_height = '100px'
-      ),
-      
-      navset_card_underline(
-        title = "Simulation Results:",
-        nav_panel("MPC Values Individually (Figure)", plotlyOutput("TPlot")),
-        nav_panel("MPC Values Individually (Table)", DTOutput("TmultTable")),
-        nav_panel("Interacting MPC Values", plotlyOutput("TAPlot")),
-        full_screen = TRUE
-      ),
-      
-    ) # end page_sidebar
-  ),
+    ), # end nav_panel (Taxation)
   
   nav_panel(
     title = 'Both',
-    page_sidebar(
-      sidebar = sidebar(
-        tags$style(HTML(".js-irs-8 .irs-single, .js-irs-8 .irs-bar-edge, .js-irs-8 .irs-bar, .js-irs-8 .irs-handle {background: gray} .js-irs-8 .irs-handle {background: gray !important;} .js-irs-8 .irs-handle:active {background: gray !important;}")),
-        tags$style(HTML(".js-irs-9 .irs-single, .js-irs-9 .irs-bar-edge, .js-irs-9 .irs-bar, .js-irs-9 .irs-handle {background: gray} .js-irs-9 .irs-handle {background: gray !important;} .js-irs-9 .irs-handle:active {background: gray !important;}")),
-        tags$style(HTML(".js-irs-10 .irs-single, .js-irs-10 .irs-bar-edge, .js-irs-10 .irs-bar, .js-irs-10 .irs-handle {background: blue} .js-irs-10 .irs-handle {background: blue !important;} .js-irs-10 .irs-handle:active {background: blue !important;}")),
-        tags$style(HTML(".js-irs-11 .irs-single, .js-irs-11 .irs-bar-edge, .js-irs-11 .irs-bar, .js-irs-11 .irs-handle {background: red} .js-irs-11 .irs-handle {background: red !important;} .js-irs-11 .irs-handle:active {background: red !important;}")),
-        tags$style(HTML(".js-irs-12 .irs-single, .js-irs-12 .irs-bar-edge, .js-irs-12 .irs-bar, .js-irs-12 .irs-handle {background: green} .js-irs-12 .irs-handle {background: green !important;} .js-irs-12 .irs-handle:active {background: green !important;}")),
-        
-        tags$h6(HTML("Choose Simulation Criteria:")),
-        sliderInput("BDELTG", label = HTML("&Delta;G (millions):"), min = -1, max = 1, value = 0, step = 0.5),
-        sliderInput("BDELTT", label = HTML("&Delta;T (millions):"), min = -1, max = 1, value = 0, step = 0.5),
-        sliderInput("BMPC1", label = HTML("MPC<sub>1</sub>:"), min = 0, max = 0.99, value = 0.50, step = 0.01),
-        sliderInput("BMPC2", label = HTML("MPC<sub>2</sub>:"), min = 0, max = 0.99, value = 0, step = 0.01),
-        sliderInput("BP2", label = HTML("% of Population with MPC<sub>2</sub>:"), min = 0, max = 100, value = 50, step = 5)
-        #p("(Dressler and Reed, 2025)")
-      ), # end sidebar
-      
-      # main window cards
-      layout_column_wrap(
-        value_box( 
-          tags$h1(HTML("GS Multiplier with MPC<sub>1</sub>:")),
-          tags$h6(HTML("Equation: <sup>1</sup>&frasl;<sub>(1 - MPC<sub>1</sub>)</sub>")),
-          value = uiOutput("BGMULT1", inline = TRUE),
-          theme = "bg-gradient-blue-red"
-        ), 
-        value_box( 
-          tags$h1(HTML("Tax Multiplier with MPC<sub>1</sub>:")),
-          tags$h6(HTML("Equation: <sup>-MPC<sub>1</sub></sup>&frasl;<sub>(1 - MPC<sub>1</sub>)</sub>")),
-          value = uiOutput("BTMULT1", inline = TRUE),
-          theme = "bg-gradient-blue-red"
-        ), 
-        value_box( 
-          tags$h1(HTML("GS Multiplier with MPC<sub>2</sub>:")), 
-          tags$h6(HTML("Equation: <sup>1</sup>&frasl;<sub>(1 - MPC<sub>2</sub>)</sub>")),
-          value = uiOutput("BGMULT2", inline = TRUE),
-          theme = "bg-gradient-red-blue"
-        ),
-        value_box( 
-          tags$h1(HTML("Tax Multiplier with MPC<sub>2</sub>:")), 
-          tags$h6(HTML("Equation: <sup>-MPC<sub>2</sub></sup>&frasl;<sub>(1 - MPC<sub>2</sub>)</sub>")),
-          value = uiOutput("BTMULT2", inline = TRUE),
-          theme = "bg-gradient-red-blue"
-        ),
-        fill = FALSE,
-        width = 1/4,
-        min_height = '100px'
-      ),
-      
-      navset_card_underline(
-        title = "Simulation Results:",
-        nav_panel("MPC Values Individually (Figure)", plotlyOutput("BmultPlot")),
-        nav_panel("MPC Values Individually (Table)", DTOutput("BmultTable")),
-        nav_panel("Interacting MPC Values", plotlyOutput("BaggPlot")),
-        full_screen = TRUE
-      ),
-      
-    ) # end page_sidebar
-  ),
-  
-  nav_panel(
-    title = 'Instructions',
-    card(
-      card_header(class = "bg-dark","Instructions"),
-      card_body("This app illustrates the impact of spending multipliers when an economy is populated with different marginal propensities to consume (MPCs).",
-                tags$ol(
-                  tags$li("Select the change in fiscal policy in the top panel: Government Spending, Taxation, or Both (at the same time)."),
-                  tags$li(HTML("Select the size of the change (or changes): &Delta;G, &Delta;T, or &Delta;G and &Delta;T.")),
-                  tags$li(HTML("Select the size of the marginal propensities to consume (MPC<sub>1</sub> and MPC<sub>2</sub>).")),
-                  tags$li(HTML("Select the percentage of population that have MPC<sub>2</sub> (the remainder having MPC<sub>1</sub>)."))
-                  ),
-               p(em("Value Boxes"),HTML(": report the size of the multiplier for each marginal propensity to consume given (MPC<sub>1</sub> or MPC<sub>2</sub>)" )),
-               p("The ", em("MPC Values Individually (Figure)"), " panel illustrates spending for each MPC (detailed in step 3) as well as the accumulated spending observed over several spending rounds."), 
-               p("The ", em("MPC Values Individually (Table)"), " panel illustrates the same information as in the previous panel in table form."), 
-               p("The ", em("Interacting MPC Values"),HTML( " panel illustrates total spending for each round when the change in income is received by a person in the economy with either MPC<sub>2</sub> (with probability given in step 4) or MPC<sub>1</sub> (otherwise). 
-                    The simulation is run 1000 times. The black line illustrates the average spending across all simulations, while the green band illustrates the range of spending paths from 90% of all observed simulation outcomes."))
-              ),
-      #card_footer("Dressler and Reed (2025)"),
-      fill = FALSE
-    )
-  )
+    ), # end nav_panel (Both)
   
   
-)
+  
+  
+) # end page_navbar
 
 # Define server 
-server <- function(input, output) {
+server <- function(input, output, session) {
   
 ##########################################################
   # Government Spending Results:
-  reactive_MPC1  <- reactive({ input$MPC1 })
-  reactive_MPC2  <- reactive({ input$MPC2 })
+  
+  # update sliders to ensure that MPC1 + MPS1 + MTR + MPI1 = 1
+  # Observe a change in MTR...
+  observeEvent(input$MTR, {
+    MPC1tmp <- 1 - sum(c(input$MTR/100, input$MPI1, input$MPS1))
+    new_max <- 1 - input$MTR/100
+    MPS1 <- input$MPS1
+    if (MPC1tmp < 0) {
+      MPS1 <- min(MPS1, new_max)
+      updateSliderInput(session, "MPS1", value = MPS1, max = new_max)
+      updateSliderInput(session, "MPI1", value = new_max-MPS1, max = new_max)
+      output$MPC1t <- renderUI({0})
+    } else {
+      updateSliderInput(session, "MPS1", max = new_max)
+      updateSliderInput(session, "MPI1", max = new_max)
+      output$MPC1t <- renderUI({round(1-sum(c(input$MTR/100, input$MPI1, input$MPS1)),2)})
+    }
+    MPC2tmp <- 1 - sum(c(input$MTR/100, input$MPI2, input$MPS2))
+    new_max <- 1 - input$MTR/100
+    MPS2 <- input$MPS2
+    if (MPC2tmp < 0) {
+      MPS2 <- min(MPS2, new_max)
+      updateSliderInput(session, "MPS2", value = MPS2, max = new_max)
+      updateSliderInput(session, "MPI2", value = new_max-MPS2, max = new_max)
+      output$MPC2t <- renderUI({0})
+    } else {
+      updateSliderInput(session, "MPS2", max = new_max)
+      updateSliderInput(session, "MPI2", max = new_max)
+      output$MPC2t <- renderUI({round(1-sum(c(input$MTR/100, input$MPI2, input$MPS2)),2)})
+    }
+  })
+  # Observe a change in MPS
+  observeEvent(input$MPS1, {
+    MPC1tmp <- 1 - sum(c(input$MTR/100, input$MPI1, input$MPS1))
+    if (MPC1tmp < 0) {
+      MPI1 <- 1 - input$MTR/100 - input$MPS1
+      updateSliderInput(session, "MPI1", value = MPI1)
+      output$MPC1t <- renderUI({0})
+    } else {
+      output$MPC1t <- renderUI({round(1-sum(c(input$MTR/100, input$MPI1, input$MPS1)),2)})
+    }
+  })
+  observeEvent(input$MPS2, {
+    MPC2tmp <- 1 - sum(c(input$MTR/100, input$MPI2, input$MPS2))
+    if (MPC2tmp < 0) {
+      MPI2 <- 1 - input$MTR/100 - input$MPS2
+      updateSliderInput(session, "MPI2", value = MPI2)
+      output$MPC2t <- renderUI({0})
+    } else {
+      output$MPC2t <- renderUI({round(1-sum(c(input$MTR/100, input$MPI2, input$MPS2)),2)})
+    }
+  })
+  # Observe a change in MPI
+  observeEvent(input$MPI1, {
+    MPC1tmp <- 1 - sum(c(input$MTR/100, input$MPI1, input$MPS1))
+    if (MPC1tmp < 0) {
+      MPS1 <- 1 - input$MTR/100 - input$MPI1
+      updateSliderInput(session, "MPS1", value = MPS1)
+      output$MPC1t <- renderUI({0})
+    } else {
+      output$MPC1t <- renderUI({round(1-sum(c(input$MTR/100, input$MPI1, input$MPS1)),2)})
+    }
+  })
+  observeEvent(input$MPI2, {
+    MPC2tmp <- 1 - sum(c(input$MTR/100, input$MPI2, input$MPS2))
+    if (MPC2tmp < 0) {
+      MPS2 <- 1 - input$MTR/100 - input$MPI2
+      updateSliderInput(session, "MPS2", value = MPS2)
+      output$MPC2t <- renderUI({0})
+    } else {
+      output$MPC2t <- renderUI({round(1-sum(c(input$MTR/100, input$MPI2, input$MPS2)),2)})
+    }
+  })
+  
+  reactive_MPC1  <- reactive({ 1-sum(c(input$MTR/100, input$MPI1, input$MPS1)) })
+  reactive_MPC2  <- reactive({ 1-sum(c(input$MTR/100, input$MPI2, input$MPS2)) })
   reactive_DELTG <- reactive({ input$DELTG })
   reactive_P2    <- reactive({ input$P2 })
   
   output$GMULT1 <- renderText({
-    glue::glue("{round(1/(1 - reactive_MPC1()),4)}")
+    glue::glue("{round(1/(1 - reactive_MPC1()),2)}")
   })
   
   output$GMULT2 <- renderText({ 
-    glue::glue("{round(1/(1 - reactive_MPC2()),4)}") 
+    glue::glue("{round(1/(1 - reactive_MPC2()),2)}") 
   })
   
   output$GPlot <- renderPlotly({
@@ -227,6 +230,7 @@ server <- function(input, output) {
     MPC1 <- reactive_MPC1()
     MPC2 <- reactive_MPC2()
     DELTG <- reactive_DELTG()
+    P2 <- reactive_P2()
     
     MULT1 <- 1 / (1 - MPC1)
     MULT2 <- 1 / (1 - MPC2)
@@ -245,24 +249,24 @@ server <- function(input, output) {
                    name = 'Cumulative Spending with MPC<sub>1</sub>',
                    line = list(color = 'blue', width = 2, dash = 'solid'),
                    marker = list(color = 'blue', size = 10),
-                   hovertemplate = '<b>Cumulative Spending with MPC<sub>1</sub>:</b> %{y:$,.4f} million<extra></extra>')
+                   hovertemplate = '<b>Cumulative Spending with MPC<sub>1</sub>:</b> %{y:$,.2f} million<extra></extra>')
     fig <- fig %>% add_trace(y = ~G1, mode = 'lines+markers',
                              name = 'Round Spending with MPC<sub>1</sub>',
                              line = list(color = 'grey', width = 1, dash = 'dash'),
                              marker = list(color = 'darkblue', size = 10),
-                             hovertemplate = '<b>Round Spending with MPC<sub>1</sub>:</b> %{y:$,.4f} million<extra></extra>')
+                             hovertemplate = '<b>Round Spending with MPC<sub>1</sub>:</b> %{y:$,.2f} million<extra></extra>')
        
-    if (MPC2 != 0) {
+    if (P2 != 0) {
       fig <- fig %>% add_trace(y = ~G2sum, mode = 'lines+markers',
                                name = 'Cumulative Spending with MPC<sub>2</sub>',
                                line = list(color = 'red', width = 2, dash = 'solid'),
                                marker = list(color = 'red', size = 10),
-                               hovertemplate = '<b>Cumulative Spending with MPC<sub>2</sub>:</b> %{y:$,.4f} million<extra></extra>')
+                               hovertemplate = '<b>Cumulative Spending with MPC<sub>2</sub>:</b> %{y:$,.2f} million<extra></extra>')
       fig <- fig %>% add_trace(y = ~G2,  mode = 'lines+markers',
                                name = 'Round Spending with MPC<sub>1</sub>',
                                line = list(color = 'grey', width = 1, dash = 'dash'),
                                marker = list(color = 'darkred', size = 10),
-                               hovertemplate = '<b>Round Spending with MPC<sub>2</sub>:</b> %{y:$,.4f} million<extra></extra>')
+                               hovertemplate = '<b>Round Spending with MPC<sub>2</sub>:</b> %{y:$,.2f} million<extra></extra>')
       fig <- fig %>%
         layout(shapes = list(
           list(
@@ -334,7 +338,7 @@ server <- function(input, output) {
     G2 <- DELTG * MPC2^(0:(ROUNDS-1))
     G2sum <- cumsum(G2)
     
-  datatable(data.frame(round(G1,4),round(G1sum,4),round(G2,4),round(G2sum,4)),
+  datatable(data.frame(round(G1,2),round(G1sum,2),round(G2,2),round(G2sum,2)),
             colnames = c("Round Spending with MPC\U2081", "Cumulated Spending with MPC\U2081", "Round Spending with MPC\U2082", "Cumulated Spending with MPC\U2082"))
   })
   
@@ -376,17 +380,17 @@ server <- function(input, output) {
     DF <- data.frame(RVEC,Meanpath,U95path,L5path)
     
     fig <- plot_ly(DF, x = ~RVEC, y = ~U95path, type = 'scatter', mode = 'lines',
-                   line = list(color = 'green'),
+                   line = list(color = 'purple'),
                    showlegend = FALSE, name = 'High 2014',
                    hovertemplate = '<b>90% of Outcomes, Upper Value:</b> %{y:$,.4f} million<extra></extra>')
     fig <- fig %>% add_trace(y = ~L5path, type = 'scatter', mode = 'lines',
-                             fill = 'tonexty', fillcolor='rgba(0,255,0,0.4)', line = list(color = 'green'),
+                             fill = 'tonexty', fillcolor='rgba(232,59,212,0.8)', line = list(color = 'purple'),
                              showlegend = FALSE, name = 'Low 2014',
-                             hovertemplate = '<b>90% of Outcomes, Lower Value:</b> %{y:$,.4f} million<extra></extra>')
+                             hovertemplate = '<b>90% of Outcomes, Lower Value:</b> %{y:$,.2f} million<extra></extra>')
     fig <- fig %>% add_trace(y = ~Meanpath, mode = 'lines+markers',
                              line = list(color = 'black', width = 2, dash = 'solid'),
                              marker = list(color = 'black', size = 10),
-                             hovertemplate = '<b>Average Outcome of Simulations:</b> %{y:$,.4f} million<extra></extra>')
+                             hovertemplate = '<b>Average Outcome of Simulations:</b> %{y:$,.2f} million<extra></extra>')
     fig <- fig %>%
       layout(hovermode = 'x unified',
              paper_bgcolor='white', plot_bgcolor='lightgrey',

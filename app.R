@@ -20,7 +20,6 @@ ui <- page_navbar(
   
   title = "The Multiplier Effect: An Application",
   
-    #########################################
   # Common Sidebar
   sidebar = sidebar(
     
@@ -33,6 +32,7 @@ ui <- page_navbar(
     
     sliderInput("MTR", label = HTML("MTR (%):"), min = 0, max = 100, value = 0, step = 1, width = 300),
     hr(),
+
     accordion(
     accordion_panel(
     title = "Type 1 Households (Default):",
@@ -43,6 +43,7 @@ ui <- page_navbar(
     hr(),
     accordion_panel(
     title = "Type 2 Households (Optional):",
+
     sliderInput("P2", label = HTML("% of Type-2 Population:"), min = 0, max = 100, value = 0, step = 5, width = 300),
     sliderInput("MPS2", label = HTML("MPS<sub>2</sub>:"), min = 0, max = 1, value = 0.50, step = 0.01, ticks = FALSE, width = 300),
     sliderInput("MPI2", label = HTML("MPI<sub>2</sub>:"), min = 0, max = 1, value = 0, step = 0.01, ticks = FALSE, width = 300),
@@ -54,6 +55,11 @@ ui <- page_navbar(
     #resizeable = FALSE,
     width = 300,
     #height = "100vh"
+    
+    open = "always",
+    resizeable = FALSE,
+    width = 300
+
   ), # end sidebar
   
   

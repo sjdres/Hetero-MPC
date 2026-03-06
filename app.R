@@ -16,16 +16,53 @@ library(DT)
 
 ui <- page_navbar(
   
-  theme = bs_theme(version = 5, bootswatch = "cosmo"),
+  theme = bs_theme(version = 5, bootswatch = "yeti"),
   
   title = "The Multiplier Effect: An Application",
+  
+    #########################################
+  # Common Sidebar
+  sidebar = sidebar(
+    
+    tags$h4(HTML("Simulation Criteria:")),
+    layout_columns(
+      column_width = c("50%", "50%"),
+    numericInput("DELTG", label = HTML("&Delta;G (Billions):"), min = -1000, max = 1000, value = 1, step = 1),
+    numericInput("DELTT", label = HTML("&Delta;T (Billions):"), min = -1000, max = 1000, value = 0, step = 1),
+    ),
+    
+    sliderInput("MTR", label = HTML("MTR (%):"), min = 0, max = 100, value = 0, step = 1, width = 300),
+    hr(),
+    accordion(
+    accordion_panel(
+    title = "Type 1 Households (Default):",
+    sliderInput("MPS1", label = HTML("MPS<sub>1</sub>:"), min = 0, max = 1, value = 0.50, step = 0.01, ticks = FALSE, width = 300),
+    sliderInput("MPI1", label = HTML("MPI<sub>1</sub>:"), min = 0, max = 1, value = 0, step = 0.01, ticks = FALSE, width = 300),
+    tags$h6(HTML("MPC<sub>1</sub>: 1 - MTR - MPS<sub>1</sub> - MPI<sub>1</sub> = "), uiOutput("MPC1t", inline = TRUE)),
+    ),
+    hr(),
+    accordion_panel(
+    title = "Type 2 Households (Optional):",
+    sliderInput("P2", label = HTML("% of Type-2 Population:"), min = 0, max = 100, value = 0, step = 5, width = 300),
+    sliderInput("MPS2", label = HTML("MPS<sub>2</sub>:"), min = 0, max = 1, value = 0.50, step = 0.01, ticks = FALSE, width = 300),
+    sliderInput("MPI2", label = HTML("MPI<sub>2</sub>:"), min = 0, max = 1, value = 0, step = 0.01, ticks = FALSE, width = 300),
+    tags$h6(HTML("MPC<sub>2</sub>: 1 - MTR - MPS<sub>2</sub> - MPI<sub>2</sub> = "), uiOutput("MPC2t", inline = TRUE)),
+    ),
+    ),
+    
+    #open = "always",
+    #resizeable = FALSE,
+    width = 300,
+    #height = "100vh"
+  ), # end sidebar
+  
   
   ######################################################################
   # Instructions:
   nav_panel(
     title = 'Instructions',
     card(
-      height = 700,
+      #height = 700,
       card_header(class = "bg-dark","Instructions"),
       card_body(p("This app illustrates the broad range of potential impacts of spending and tax / transfer multipliers in an aggregate economy."),
                 tags$h4(HTML("Step 1: Select the type(s) of Fiscal Policy Change(s) from the above menu:")),
@@ -58,45 +95,25 @@ ui <- page_navbar(
                 ),
       ),
       card_footer("XXX and XXX (XXXX) [Link to Paper]"),
-      fill = FALSE
+      
     )
   ), # end nav_panel (Instructions)
   ####################################################################
   # Government Spending:
   nav_panel(
     title = 'Government Spending',
-    page_sidebar(
-      
-      sidebar = sidebar(
-        tags$h4(HTML("Simulation Criteria:")),
-        numericInput("DELTG", label = HTML("&Delta;G (Millions):"), min = -1000, max = 1000, value = 0, step = 1, width = 100),
-        sliderInput("MTR", label = HTML("MTR (%):"), min = 0, max = 100, value = 0, step = 1, width = 225),
-        hr(),
-        
-        tags$h5(HTML("Type 1 Households:")),
-        sliderInput("MPS1", label = HTML("MPS<sub>1</sub>:"), min = 0, max = 1, value = 0.50, step = 0.01, ticks = FALSE, width = 225),
-        sliderInput("MPI1", label = HTML("MPI<sub>1</sub>:"), min = 0, max = 1, value = 0.50, step = 0.01, ticks = FALSE, width = 225),
-        tags$h6(HTML("MPC<sub>1</sub>: 1 - MTR - MPS<sub>1</sub> - MPI<sub>1</sub> = "), uiOutput("MPC1t", inline = TRUE)),
-        hr(),
-        
-        tags$h5(HTML("Type 2 Households (Optional):")),
-        sliderInput("P2", label = HTML("% of Type-2 Population:"), min = 0, max = 100, value = 0, step = 5, width = 225),
-        sliderInput("MPS2", label = HTML("MPS<sub>2</sub>:"), min = 0, max = 1, value = 0.50, step = 0.01, ticks = FALSE, width = 225),
-        sliderInput("MPI2", label = HTML("MPI<sub>2</sub>:"), min = 0, max = 1, value = 0.50, step = 0.01, ticks = FALSE, width = 225),
-        tags$h6(HTML("MPC<sub>2</sub>: 1 - MTR - MPS<sub>2</sub> - MPI<sub>2</sub> = "), uiOutput("MPC2t", inline = TRUE)),
-        
-        width = "300px"
-        
-        ), # end sidebar
-      
-      # main window cards
+    
+    # main window cards
       
       navset_card_underline(
         full_screen = TRUE,
-        title = "Simulation Results:",
+        
+        title = tags$h4("Simulation Results"),
         nav_panel("MPC Values Individually (Figure)", plotlyOutput("GPlot")),
         nav_panel("MPC Values Individually (Table)", DTOutput("GmultTable")),
         nav_panel("Interacting MPC Values", plotlyOutput("GAPlot")),
+        
+        
        ),
       
       layout_column_wrap(
@@ -117,20 +134,19 @@ ui <- page_navbar(
         height = "100px"
       ),
       
-    ) # end page_sidebar
   ), # end nav_panel (Government Spending)
   
-  nav_panel(
-    title = 'Taxation',
-    ), # end nav_panel (Taxation)
+  #nav_panel(
+  #  title = 'Taxation',
+  #  ), # end nav_panel (Taxation)
   
-  nav_panel(
-    title = 'Both',
-    ), # end nav_panel (Both)
-  
-  
+  #nav_panel(
+  #  title = 'Both',
+  #  ), # end nav_panel (Both)
   
   
+  
+
 ) # end page_navbar
 
 # Define server 
@@ -228,7 +244,9 @@ server <- function(input, output, session) {
   output$GPlot <- renderPlotly({
     
     MPC1 <- reactive_MPC1()
+      MPC1 <- max(MPC1,0)
     MPC2 <- reactive_MPC2()
+      MPC2 <- max(MPC2,0)
     DELTG <- reactive_DELTG()
     P2 <- reactive_P2()
     
@@ -345,7 +363,9 @@ server <- function(input, output, session) {
   output$GAPlot <- renderPlotly({
     
     MPC1 <- reactive_MPC1()
+      MPC1 <- max(MPC1,0)
     MPC2 <- reactive_MPC2()
+      MPC2 <- max(MPC2,0)
     P2 <-   reactive_P2()
     DELTG <- reactive_DELTG()
     

@@ -53,7 +53,7 @@ ui <- page_navbar(
     
     #open = "always",
     #resizeable = FALSE,
-    width = 300,
+    #width = 300,
     #height = "100vh"
     
     open = "always",

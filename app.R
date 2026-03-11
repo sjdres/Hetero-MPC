@@ -51,14 +51,9 @@ ui <- page_navbar(
     ),
     ),
     
-    #open = "always",
-    #resizeable = FALSE,
-    #width = 300,
-    #height = "100vh"
-    
     open = "always",
     resizeable = FALSE,
-    width = 300
+    width = 320
 
   ), # end sidebar
   
@@ -71,50 +66,53 @@ ui <- page_navbar(
       #height = 700,
       card_header(class = "bg-dark","Instructions"),
       card_body(p("This app illustrates the broad range of potential impacts of spending and tax / transfer multipliers in an aggregate economy."),
-                tags$h4(HTML("Step 1: Select the type(s) of Fiscal Policy Change(s) from the above menu:")),
+                p("To begin, select the following parameters using the menu on the left."),
+                tags$h4(HTML("Step 1: Select the type(s) of Fiscal Policy Change(s):")),
                 tags$ol(
                   tags$li(HTML("A change in Government Purchases (&Delta;G)")),
-                  tags$li(HTML("A change in Taxation or Transfer Payments (&Delta;T)")),
-                  tags$li(HTML("A change in both Government Purchases and Taxation or Transfer Payments (&Delta;G and &Delta;T)"))
+                  tags$li(HTML("A change in Lump-Sum Taxation or Transfer Payments (&Delta;T)*")),
+                  tags$li(HTML("The Marginal Income Tax Rate (MTR)"))
                 ),
-                tags$h4(HTML("Step 2: Select the following Simulation Criteria:")),
+                p(HTML("* Note that &Delta;T > 0 is interpreted as a tax decrease or an increase in transfer payments.")),
+                tags$h4(HTML("Step 2: Select the Type-1 Household Characteristics:")),
                 p("The default is that there is only 1 household type in the economy (Type 1)"),
                 tags$ol(
-                  tags$li(HTML("The size of the policy change (in millions of dollars)")),
-                  tags$li(HTML("The marginal income tax rate: MTR")),
                   tags$li(HTML("The marginal propensity to save: MPS<sub>1</sub>")),
                   tags$li(HTML("The marginal propensity to import: MPI<sub>1</sub>")),
-                  tags$li(HTML("The marginal propensity to consume (domestic goods & services) is given by: MPC<sub>1</sub> = 1 - MTR - MPS<sub>1</sub> - MPI<sub>1</sub>")),
+                  tags$li(HTML("The marginal propensity to consume (only domestic goods & services) is given by: MPC<sub>1</sub> = 1 - MTR - MPS<sub>1</sub> - MPI<sub>1</sub>")),
                 ),
-                tags$h4(HTML("Step 3: (Optional) Allow for a second household type that can differ in their marginal propensities:")),
+                tags$h4(HTML("Step 3: Allow for a Second Household Type (Optional):")),
                 tags$ol(
                   tags$li(HTML("Select the percentage of the population for the Type 2 households")),
-                  tags$li(HTML("Select marginal propensities for the Type 2 household (assuming the same MTR across households)"))
+                  tags$li(HTML("The marginal propensity to save: MPS<sub>2</sub>")),
+                  tags$li(HTML("The marginal propensity to import: MPI<sub>2</sub>")),
+                  tags$li(HTML("The marginal propensity to consume (only domestic goods & services) is given by: MPC<sub>2</sub> = 1 - MTR - MPS<sub>2</sub> - MPI<sub>2</sub>")),
                   ),
-                tags$h4(HTML("Step 4: Explore the results of the simulation:")),
+                tags$h4(HTML("Step 4: Explore the Simulation Results:")),
                 tags$ol(
-                  tags$li("The ", em("MPC Values Individually (Figure)"), " panel illustrates spending for each household type as well as the accumulated spending observed over several spending rounds."), 
-                  tags$li("The ", em("MPC Values Individually (Table)"), " panel illustrates the same information as in the previous panel in table form."), 
-                  tags$li(em("Value Boxes"),HTML(": report the size of the individual multipliers for each household type provided" )),
+                  tags$li("The ", em("Value Boxes")," at the bottom of the page report the size of the individual multipliers for each household type." ),
+                  tags$li("The ", em("MPC Values Individually (Figure)"), " panel illustrates the cumulative and round spending for each household type, individually. This result is useful for comparing the results for two distinctly different economies."), 
+                  tags$li("The ", em("MPC Values Individually (Table)"), " panel illustrates the same information presented in the previous panel in table form."), 
                   tags$li("The ", em("Interacting MPC Values"),HTML( " panel illustrates total spending for each round when the change in income is received by either a Type 2 household (with probability equal to the percentage of population) or a Type 1 household (otherwise). 
                     The simulation is run 1000 times. The black line illustrates the average spending across all simulations, while the purple band illustrates the range of spending paths from 90% of all observed simulation outcomes.")),
                 ),
+                tags$h4(HTML("See the paper (linked below) for details on the derivation of the multipliers and detailed exercises.")),
       ),
       card_footer("XXX and XXX (XXXX) [Link to Paper]"),
       
     )
   ), # end nav_panel (Instructions)
-  ####################################################################
+  #######################################################################
   # Government Spending:
   nav_panel(
-    title = 'Government Spending',
+    title = 'Simulation Results',
     
     # main window cards
       
       navset_card_underline(
         full_screen = TRUE,
         
-        title = tags$h4("Simulation Results"),
+        title = tags$h4("Simulation Results  "),
         nav_panel("MPC Values Individually (Figure)", plotlyOutput("GPlot")),
         nav_panel("MPC Values Individually (Table)", DTOutput("GmultTable")),
         nav_panel("Interacting MPC Values", plotlyOutput("GAPlot")),
@@ -124,34 +122,35 @@ ui <- page_navbar(
       
       layout_column_wrap(
         value_box( 
-          tags$h1(HTML("Multiplier with MPC<sub>1</sub>: <sup>1</sup>&frasl;<sub>(1 - MPC<sub>1</sub>)</sub>")),
-          showcase = icon("sack-dollar"),
+          tags$h1(HTML("Type 1 &Delta;G Multiplier:")),
+          p(HTML("Equation: <sup>1</sup>&frasl;<sub>(1 - MPC<sub>1</sub>)</sub>")),
           value = uiOutput("GMULT1", inline = TRUE),
           theme = "bg-gradient-blue-red"
-        ), 
+        ),
         value_box( 
-          tags$h1(HTML("Multiplier with MPC<sub>2</sub>: <sup>1</sup>&frasl;<sub>(1 - MPC<sub>2</sub>)</sub>")), 
-          showcase = icon("sack-dollar"), 
+          tags$h1(HTML("Type 1 &Delta;T Multiplier:")),
+          p(HTML("Equation: <sup>MPC<sub>1</sub></sup>&frasl;<sub>(1 - MPC<sub>1</sub>)</sub>")),
+          value = uiOutput("TMULT1F", inline = TRUE),
+          theme = "bg-gradient-blue-red"
+        ),
+        value_box( 
+          tags$h1(HTML("Type 2 &Delta;G Multiplier:")), 
+          p(HTML("Equation: <sup>1</sup>&frasl;<sub>(1 - MPC<sub>2</sub>)</sub>")),
           value = uiOutput("GMULT2", inline = TRUE),
           theme = "bg-gradient-red-blue"
         ),
+        value_box( 
+          tags$h1(HTML("Type 2 &Delta;T Multiplier:")), 
+          p(HTML("Equation: <sup>MPC<sub>2</sub></sup>&frasl;<sub>(1 - MPC<sub>2</sub>)</sub>")),
+          value = uiOutput("TMULT2F", inline = TRUE),
+          theme = "bg-gradient-red-blue"
+        ),
         fill = FALSE,
-        width = "300px",
+        width = "150px",
         height = "100px"
       ),
       
-  ), # end nav_panel (Government Spending)
-  
-  #nav_panel(
-  #  title = 'Taxation',
-  #  ), # end nav_panel (Taxation)
-  
-  #nav_panel(
-  #  title = 'Both',
-  #  ), # end nav_panel (Both)
-  
-  
-  
+  ), # end nav_panel
 
 ) # end page_navbar
 
@@ -159,7 +158,7 @@ ui <- page_navbar(
 server <- function(input, output, session) {
   
 ##########################################################
-  # Government Spending Results:
+  # Simulation Spending Results:
   
   # update sliders to ensure that MPC1 + MPS1 + MTR + MPI1 = 1
   # Observe a change in MTR...
@@ -237,14 +236,23 @@ server <- function(input, output, session) {
   reactive_MPC1  <- reactive({ 1-sum(c(input$MTR/100, input$MPI1, input$MPS1)) })
   reactive_MPC2  <- reactive({ 1-sum(c(input$MTR/100, input$MPI2, input$MPS2)) })
   reactive_DELTG <- reactive({ input$DELTG })
+  reactive_DELTT <- reactive({ input$DELTT })
   reactive_P2    <- reactive({ input$P2 })
   
   output$GMULT1 <- renderText({
     glue::glue("{round(1/(1 - reactive_MPC1()),2)}")
   })
   
+  output$TMULT1F <- renderText({
+    glue::glue("{round(reactive_MPC1()/(1 - reactive_MPC1()),2)}")
+  })
+  
   output$GMULT2 <- renderText({ 
     glue::glue("{round(1/(1 - reactive_MPC2()),2)}") 
+  })
+  
+  output$TMULT2F <- renderText({
+    glue::glue("{round(reactive_MPC2()/(1 - reactive_MPC2()),2)}")
   })
   
   output$GPlot <- renderPlotly({
@@ -254,58 +262,65 @@ server <- function(input, output, session) {
     MPC2 <- reactive_MPC2()
       MPC2 <- max(MPC2,0)
     DELTG <- reactive_DELTG()
+    DELTT <- reactive_DELTT()
     P2 <- reactive_P2()
     
-    MULT1 <- 1 / (1 - MPC1)
-    MULT2 <- 1 / (1 - MPC2)
+    GMULT1 <- 1 / (1 - MPC1)
+    GMULT2 <- 1 / (1 - MPC2)
+    
+    TMULT1 <- MPC1 / (1 - MPC1)
+    TMULT2 <- MPC2 / (1 - MPC2)
     
     ROUNDS = 20
     RVEC = 1:ROUNDS
     
-    G1 <- DELTG * MPC1^(0:(ROUNDS-1))
+    G1 <- DELTG * MPC1^(0:(ROUNDS-1)) + DELTT *  MPC1^(1:ROUNDS)
     G1sum <- cumsum(G1)
-    G2 <- DELTG * MPC2^(0:(ROUNDS-1))
+    G2 <- DELTG * MPC2^(0:(ROUNDS-1)) + DELTT *  MPC2^(1:ROUNDS)
     G2sum <- cumsum(G2)
+    
+    BTOT1F <- DELTG * GMULT1 + DELTT * TMULT1
+    BTOT2F <- DELTG * GMULT2 + DELTT * TMULT2
     
     DF <- data.frame(RVEC,G1,G1sum,G2,G2sum)
     
     fig <- plot_ly(DF, x = ~RVEC, y = ~G1sum, type = 'scatter', mode = 'lines+markers',
-                   name = 'Cumulative Spending with MPC<sub>1</sub>',
+                   name = 'Cumulative Spending (Type 1)',
                    line = list(color = 'blue', width = 2, dash = 'solid'),
                    marker = list(color = 'blue', size = 10),
-                   hovertemplate = '<b>Cumulative Spending with MPC<sub>1</sub>:</b> %{y:$,.2f} million<extra></extra>')
+                   hovertemplate = '<b>Cumulative Spending (Type 1):</b> %{y:$,.2f} Billion<extra></extra>')
     fig <- fig %>% add_trace(y = ~G1, mode = 'lines+markers',
-                             name = 'Round Spending with MPC<sub>1</sub>',
+                             name = 'Round Spending (Type 1)',
                              line = list(color = 'grey', width = 1, dash = 'dash'),
                              marker = list(color = 'darkblue', size = 10),
-                             hovertemplate = '<b>Round Spending with MPC<sub>1</sub>:</b> %{y:$,.2f} million<extra></extra>')
+                             hovertemplate = '<b>Round Spending (Type 1):</b> %{y:$,.2f} Billion<extra></extra>')
        
     if (P2 != 0) {
       fig <- fig %>% add_trace(y = ~G2sum, mode = 'lines+markers',
-                               name = 'Cumulative Spending with MPC<sub>2</sub>',
+                               name = 'Cumulative Spending (Type 2)',
                                line = list(color = 'red', width = 2, dash = 'solid'),
                                marker = list(color = 'red', size = 10),
-                               hovertemplate = '<b>Cumulative Spending with MPC<sub>2</sub>:</b> %{y:$,.2f} million<extra></extra>')
+                               hovertemplate = '<b>Cumulative Spending (Type 2):</b> %{y:$,.2f} Billion<extra></extra>')
       fig <- fig %>% add_trace(y = ~G2,  mode = 'lines+markers',
-                               name = 'Round Spending with MPC<sub>1</sub>',
+                               name = 'Round Spending (Type 2)',
                                line = list(color = 'grey', width = 1, dash = 'dash'),
                                marker = list(color = 'darkred', size = 10),
-                               hovertemplate = '<b>Round Spending with MPC<sub>2</sub>:</b> %{y:$,.2f} million<extra></extra>')
+                               hovertemplate = '<b>Round Spending (Type 2):</b> %{y:$,.2f} Billion<extra></extra>')
       fig <- fig %>%
         layout(shapes = list(
           list(
             type = "line",
             x0 = 0,
             x1 = 21,
-            y0 = MULT2*DELTG,
-            y1 = MULT2*DELTG,
+            y0 = BTOT2F,
+            y1 = BTOT2F,
             line = list(color = 'black', width = 1, dash = "dash")),
           list(
             type = "line",
             x0 = 0,
             x1 = 21,
-            y0 = MULT1*DELTG,
-            y1 = MULT1*DELTG,
+            y0 = BTOT1F,
+            y1 = BTOT1F,
             line = list(color = 'black', width = 1, dash = "dash"))
           ))
     }
@@ -324,7 +339,7 @@ server <- function(input, output, session) {
                           ticks = 'outside',
                           zeroline = FALSE,
                           tickvals = seq(1,20,1)),
-             yaxis = list(title = "Dollars (millions)",
+             yaxis = list(title = "Dollars (Billions)",
                           gridcolor = 'white',
                           showgrid = TRUE,
                           showline = FALSE,
@@ -335,8 +350,8 @@ server <- function(input, output, session) {
              shapes = list(
                       list(type = "line",
                            x0 = 0, x1 = 21,
-                           y0 = MULT1*DELTG,
-                           y1 = MULT1*DELTG,
+                           y0 = BTOT1F,
+                           y1 = BTOT1F,
                            line = list(
                              color = 'black', width = 1, dash = "dash"))))
     
@@ -350,16 +365,19 @@ server <- function(input, output, session) {
     MPC1 <- reactive_MPC1()
     MPC2 <- reactive_MPC2()
     DELTG <- reactive_DELTG()
+    DELTT <- reactive_DELTT()
     
-    MULT1 <- 1 / (1 - MPC1)
-    MULT2 <- 1 / (1 - MPC2)
+    GMULT1 <- 1 / (1 - MPC1)
+    GMULT2 <- 1 / (1 - MPC2)
+    TMULT1 <- MPC1 / (1 - MPC1)
+    TMULT2 <- MPC2 / (1 - MPC2)
     
     ROUNDS = 100
     RVEC = 1:ROUNDS
     
-    G1 <- DELTG * MPC1^(0:(ROUNDS-1))
+    G1 <- DELTG * MPC1^(0:(ROUNDS-1)) + DELTT *  MPC1^(1:ROUNDS)
     G1sum <- cumsum(G1)
-    G2 <- DELTG * MPC2^(0:(ROUNDS-1))
+    G2 <- DELTG * MPC2^(0:(ROUNDS-1)) + DELTT *  MPC2^(1:ROUNDS)
     G2sum <- cumsum(G2)
     
   datatable(data.frame(round(G1,2),round(G1sum,2),round(G2,2),round(G2sum,2)),
@@ -374,6 +392,7 @@ server <- function(input, output, session) {
       MPC2 <- max(MPC2,0)
     P2 <-   reactive_P2()
     DELTG <- reactive_DELTG()
+    DELTT <- reactive_DELTT()
     
     ROUNDS = 20
     RVEC = 1:ROUNDS
@@ -383,9 +402,9 @@ server <- function(input, output, session) {
     
     for (j in 1:SIMS){
       
-      G1 = DELTG
-      G1sum = DELTG
-      MPCZ = sample(c(MPC1,MPC2), ROUNDS-1, replace = TRUE, prob = c(100-P2,P2))
+      MPCZ = sample(c(MPC1,MPC2), ROUNDS, replace = TRUE, prob = c(100-P2,P2))
+      G1 = DELTG + MPCZ[1] * DELTT
+      G1sum = G1
       
       for (i in 2:ROUNDS){
         G1 <- append(G1,G1[i-1] * MPCZ[i-1])
@@ -408,15 +427,15 @@ server <- function(input, output, session) {
     fig <- plot_ly(DF, x = ~RVEC, y = ~U95path, type = 'scatter', mode = 'lines',
                    line = list(color = 'purple'),
                    showlegend = FALSE, name = 'High 2014',
-                   hovertemplate = '<b>90% of Outcomes, Upper Value:</b> %{y:$,.4f} million<extra></extra>')
+                   hovertemplate = '<b>90% of Outcomes, Upper Value:</b> %{y:$,.4f} Billion<extra></extra>')
     fig <- fig %>% add_trace(y = ~L5path, type = 'scatter', mode = 'lines',
                              fill = 'tonexty', fillcolor='rgba(232,59,212,0.8)', line = list(color = 'purple'),
                              showlegend = FALSE, name = 'Low 2014',
-                             hovertemplate = '<b>90% of Outcomes, Lower Value:</b> %{y:$,.2f} million<extra></extra>')
+                             hovertemplate = '<b>90% of Outcomes, Lower Value:</b> %{y:$,.2f} Billion<extra></extra>')
     fig <- fig %>% add_trace(y = ~Meanpath, mode = 'lines+markers',
                              line = list(color = 'black', width = 2, dash = 'solid'),
                              marker = list(color = 'black', size = 10),
-                             hovertemplate = '<b>Average Outcome of Simulations:</b> %{y:$,.2f} million<extra></extra>')
+                             hovertemplate = '<b>Average Outcome of Simulations:</b> %{y:$,.2f} Billion<extra></extra>')
     fig <- fig %>%
       layout(hovermode = 'x unified',
              paper_bgcolor='white', plot_bgcolor='lightgrey',
@@ -431,7 +450,7 @@ server <- function(input, output, session) {
                           ticks = 'outside',
                           zeroline = FALSE,
                           tickvals = seq(1,20,1)),
-             yaxis = list(title = "Dollars (millions)",
+             yaxis = list(title = "Dollars (Billions)",
                           gridcolor = 'white',
                           showgrid = TRUE,
                           showline = FALSE,
@@ -484,24 +503,24 @@ server <- function(input, output, session) {
                    name = 'Cumulative Spending with MPC<sub>1</sub>',
                    line = list(color = 'blue', width = 2, dash = 'solid'),
                    marker = list(color = 'blue', size = 10),
-                   hovertemplate = '<b>Cumulative Spending with MPC<sub>1</sub>:</b> %{y:$,.4f} million<extra></extra>')
+                   hovertemplate = '<b>Cumulative Spending with MPC<sub>1</sub>:</b> %{y:$,.4f} Billion<extra></extra>')
     fig <- fig %>% add_trace(y = ~T1, mode = 'lines+markers',
                              name = 'Round Spending with MPC<sub>1</sub>',
                              line = list(color = 'grey', width = 1, dash = 'dash'),
                              marker = list(color = 'darkblue', size = 10),
-                             hovertemplate = '<b>Round Spending with MPC<sub>1</sub>:</b> %{y:$,.4f} million<extra></extra>')
+                             hovertemplate = '<b>Round Spending with MPC<sub>1</sub>:</b> %{y:$,.4f} Billion<extra></extra>')
     
     if (TMPC2 != 0) {
       fig <- fig %>% add_trace(y = ~T2sum, mode = 'lines+markers',
                                name = 'Cumulative Spending with MPC<sub>2</sub>',
                                line = list(color = 'red', width = 2, dash = 'solid'),
                                marker = list(color = 'red', size = 10),
-                               hovertemplate = '<b>Cumulative Spending with MPC<sub>2</sub>:</b> %{y:$,.4f} million<extra></extra>')
+                               hovertemplate = '<b>Cumulative Spending with MPC<sub>2</sub>:</b> %{y:$,.4f} Billion<extra></extra>')
       fig <- fig %>% add_trace(y = ~T2,  mode = 'lines+markers',
                                name = 'Round Spending with MPC<sub>1</sub>',
                                line = list(color = 'grey', width = 1, dash = 'dash'),
                                marker = list(color = 'darkred', size = 10),
-                               hovertemplate = '<b>Round Spending with MPC<sub>2</sub>:</b> %{y:$,.4f} million<extra></extra>')
+                               hovertemplate = '<b>Round Spending with MPC<sub>2</sub>:</b> %{y:$,.4f} Billion<extra></extra>')
       fig <- fig %>%
         layout(shapes = list(
           list(
@@ -535,7 +554,7 @@ server <- function(input, output, session) {
                           ticks = 'outside',
                           zeroline = FALSE,
                           tickvals = seq(1,20,1)),
-             yaxis = list(title = "Dollars (millions)",
+             yaxis = list(title = "Dollars (Billions)",
                           gridcolor = 'white',
                           showgrid = TRUE,
                           showline = FALSE,
@@ -620,15 +639,15 @@ server <- function(input, output, session) {
     fig <- plot_ly(DF, x = ~RVEC, y = ~U95path, type = 'scatter', mode = 'lines',
                    line = list(color = 'green'),
                    showlegend = FALSE, name = 'High 2014',
-                   hovertemplate = '<b>90% of Outcomes, Upper Value:</b> %{y:$,.4f} million<extra></extra>')
+                   hovertemplate = '<b>90% of Outcomes, Upper Value:</b> %{y:$,.4f} Billion<extra></extra>')
     fig <- fig %>% add_trace(y = ~L5path, type = 'scatter', mode = 'lines',
                              fill = 'tonexty', fillcolor='rgba(0,255,0,0.4)', line = list(color = 'green'),
                              showlegend = FALSE, name = 'Low 2014',
-                             hovertemplate = '<b>90% of Outcomes, Lower Value:</b> %{y:$,.4f} million<extra></extra>')
+                             hovertemplate = '<b>90% of Outcomes, Lower Value:</b> %{y:$,.4f} Billion<extra></extra>')
     fig <- fig %>% add_trace(y = ~Meanpath, mode = 'lines+markers',
                              line = list(color = 'black', width = 2, dash = 'solid'),
                              marker = list(color = 'black', size = 10),
-                             hovertemplate = '<b>Average Outcome of Simulations:</b> %{y:$,.4f} million<extra></extra>')
+                             hovertemplate = '<b>Average Outcome of Simulations:</b> %{y:$,.4f} Billion<extra></extra>')
     fig <- fig %>%
       layout(hovermode = 'x unified',
              paper_bgcolor='white', plot_bgcolor='lightgrey',
@@ -643,7 +662,7 @@ server <- function(input, output, session) {
                           ticks = 'outside',
                           zeroline = FALSE,
                           tickvals = seq(1,20,1)),
-             yaxis = list(title = "Dollars (millions)",
+             yaxis = list(title = "Dollars (Billions)",
                           gridcolor = 'white',
                           showgrid = TRUE,
                           showline = FALSE,
@@ -709,24 +728,24 @@ server <- function(input, output, session) {
                    name = 'Cumulative Spending with MPC<sub>1</sub>',
                    line = list(color = 'blue', width = 2, dash = 'solid'),
                    marker = list(color = 'blue', size = 10),
-                   hovertemplate = '<b>Cumulative Spending with MPC<sub>1</sub>:</b> %{y:$,.4f} million<extra></extra>')
+                   hovertemplate = '<b>Cumulative Spending with MPC<sub>1</sub>:</b> %{y:$,.4f} Billion<extra></extra>')
     fig <- fig %>% add_trace(y = ~B1, mode = 'lines+markers',
                              name = 'Round Spending with MPC<sub>1</sub>',
                              line = list(color = 'grey', width = 1, dash = 'dash'),
                              marker = list(color = 'darkblue', size = 10),
-                             hovertemplate = '<b>Round Spending with MPC<sub>1</sub>:</b> %{y:$,.4f} million<extra></extra>')
+                             hovertemplate = '<b>Round Spending with MPC<sub>1</sub>:</b> %{y:$,.4f} Billion<extra></extra>')
     
     if (BMPC2 != 0) {
       fig <- fig %>% add_trace(y = ~B2sum, mode = 'lines+markers',
                                name = 'Cumulative Spending with MPC<sub>2</sub>',
                                line = list(color = 'red', width = 2, dash = 'solid'),
                                marker = list(color = 'red', size = 10),
-                               hovertemplate = '<b>Cumulative Spending with MPC<sub>2</sub>:</b> %{y:$,.4f} million<extra></extra>')
+                               hovertemplate = '<b>Cumulative Spending with MPC<sub>2</sub>:</b> %{y:$,.4f} Billion<extra></extra>')
       fig <- fig %>% add_trace(y = ~B2,  mode = 'lines+markers',
                                name = 'Round Spending with MPC<sub>1</sub>',
                                line = list(color = 'grey', width = 1, dash = 'dash'),
                                marker = list(color = 'darkred', size = 10),
-                               hovertemplate = '<b>Round Spending with MPC<sub>2</sub>:</b> %{y:$,.4f} million<extra></extra>')
+                               hovertemplate = '<b>Round Spending with MPC<sub>2</sub>:</b> %{y:$,.4f} Billion<extra></extra>')
       fig <- fig %>%
         layout(shapes = list(
           list(
@@ -760,7 +779,7 @@ server <- function(input, output, session) {
                           ticks = 'outside',
                           zeroline = FALSE,
                           tickvals = seq(1,20,1)),
-             yaxis = list(title = "Dollars (millions)",
+             yaxis = list(title = "Dollars (Billions)",
                           gridcolor = 'white',
                           showgrid = TRUE,
                           showline = FALSE,
@@ -851,15 +870,15 @@ server <- function(input, output, session) {
     fig <- plot_ly(DF, x = ~RVEC, y = ~U95path, type = 'scatter', mode = 'lines',
                    line = list(color = 'green'),
                    showlegend = FALSE, name = 'High 2014',
-                   hovertemplate = '<b>90% of Outcomes, Upper Value:</b> %{y:$,.4f} million<extra></extra>')
+                   hovertemplate = '<b>90% of Outcomes, Upper Value:</b> %{y:$,.4f} Billion<extra></extra>')
     fig <- fig %>% add_trace(y = ~L5path, type = 'scatter', mode = 'lines',
                              fill = 'tonexty', fillcolor='rgba(0,255,0,0.4)', line = list(color = 'green'),
                              showlegend = FALSE, name = 'Low 2014',
-                             hovertemplate = '<b>90% of Outcomes, Lower Value:</b> %{y:$,.4f} million<extra></extra>')
+                             hovertemplate = '<b>90% of Outcomes, Lower Value:</b> %{y:$,.4f} Billion<extra></extra>')
     fig <- fig %>% add_trace(y = ~Meanpath, mode = 'lines+markers',
                              line = list(color = 'black', width = 2, dash = 'solid'),
                              marker = list(color = 'black', size = 10),
-                             hovertemplate = '<b>Average Outcome of Simulations:</b> %{y:$,.4f} million<extra></extra>')
+                             hovertemplate = '<b>Average Outcome of Simulations:</b> %{y:$,.4f} Billion<extra></extra>')
     fig <- fig %>%
       layout(hovermode = 'x unified',
              paper_bgcolor='white', plot_bgcolor='lightgrey',
@@ -874,7 +893,7 @@ server <- function(input, output, session) {
                           ticks = 'outside',
                           zeroline = FALSE,
                           tickvals = seq(1,20,1)),
-             yaxis = list(title = "Dollars (millions)",
+             yaxis = list(title = "Dollars (Billions)",
                           gridcolor = 'white',
                           showgrid = TRUE,
                           showline = FALSE,

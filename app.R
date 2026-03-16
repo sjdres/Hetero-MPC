@@ -65,35 +65,37 @@ ui <- page_navbar(
     card(
       #height = 700,
       card_header(class = "bg-dark","Instructions"),
-      card_body(p("This app illustrates the broad range of potential impacts of spending and tax / transfer multipliers in an aggregate economy."),
+      card_body(p("This app illustrates the impacts of government spending and lump-sum tax / transfer payment multipliers in an aggregate economy."),
                 p("To begin, select the following parameters using the menu on the left."),
-                tags$h4(HTML("Step 1: Select the type(s) of Fiscal Policy Change(s):")),
+                tags$h4(HTML("Step 1: Select the type(s) of Fiscal Policy:")),
                 tags$ol(
-                  tags$li(HTML("A change in Government Purchases (&Delta;G)")),
+                  tags$li(HTML("A change in Government Purchases of goods and services (&Delta;G)")),
                   tags$li(HTML("A change in Lump-Sum Taxation or Transfer Payments (&Delta;T)*")),
-                  tags$li(HTML("The Marginal Income Tax Rate (MTR)"))
+                  tags$li(HTML("The Marginal Income Tax Rate (MTR)")),
+                  p(HTML("* Note that &Delta;T > 0 is interpretable as either a lump-sum tax <em>decrease</em> or a transfer payment <em>increase</em>.")),
                 ),
-                p(HTML("* Note that &Delta;T > 0 is interpreted as a tax decrease or an increase in transfer payments.")),
                 tags$h4(HTML("Step 2: Select the Type-1 Household Characteristics:")),
-                p("The default is that there is only 1 household type in the economy (Type 1)"),
+                p("The default is that there is only 1 household type in the economy (Type 1 Households)"),
                 tags$ol(
                   tags$li(HTML("The marginal propensity to save: MPS<sub>1</sub>")),
-                  tags$li(HTML("The marginal propensity to import: MPI<sub>1</sub>")),
+                  tags$li(HTML("The marginal propensity to import: MPI<sub>1</sub>*")),
                   tags$li(HTML("The marginal propensity to consume (only domestic goods & services) is given by: MPC<sub>1</sub> = 1 - MTR - MPS<sub>1</sub> - MPI<sub>1</sub>")),
-                ),
+                  p(HTML("* Note that the marginal propensity to export on the part of foreign consumers is assumed to be zero (for simplicity).")),
+                  ),
                 tags$h4(HTML("Step 3: Allow for a Second Household Type (Optional):")),
                 tags$ol(
                   tags$li(HTML("Select the percentage of the population for the Type 2 households")),
                   tags$li(HTML("The marginal propensity to save: MPS<sub>2</sub>")),
-                  tags$li(HTML("The marginal propensity to import: MPI<sub>2</sub>")),
+                  tags$li(HTML("The marginal propensity to import: MPI<sub>2</sub>*")),
                   tags$li(HTML("The marginal propensity to consume (only domestic goods & services) is given by: MPC<sub>2</sub> = 1 - MTR - MPS<sub>2</sub> - MPI<sub>2</sub>")),
-                  ),
+                  p(HTML("* Note that the marginal propensity to export on the part of foreign consumers is assumed to be zero (for simplicity).")),
+                ),
                 tags$h4(HTML("Step 4: Explore the Simulation Results:")),
                 tags$ol(
                   tags$li("The ", em("Value Boxes")," at the bottom of the page report the size of the individual multipliers for each household type." ),
-                  tags$li("The ", em("MPC Values Individually (Figure)"), " panel illustrates the cumulative and round spending for each household type, individually. This result is useful for comparing the results for two distinctly different economies."), 
-                  tags$li("The ", em("MPC Values Individually (Table)"), " panel illustrates the same information presented in the previous panel in table form."), 
-                  tags$li("The ", em("Interacting MPC Values"),HTML( " panel illustrates total spending for each round when the change in income is received by either a Type 2 household (with probability equal to the percentage of population) or a Type 1 household (otherwise). 
+                  tags$li("The ", em("MPC Values Individually (Figure)"), " panel illustrates the cumulative and round spending for each household type. This is useful for comparing the results of two distinctly different economies."), 
+                  tags$li("The ", em("MPC Values Individually (Table)"), " panel presents a table of the same information illustrated in the previous figure."), 
+                  tags$li("The ", em("Interacting MPC Values"),HTML( " panel illustrates total spending for each round when the change in income is randomly received by either a Type 2 household (with probability equal to the percentage of population) or a Type 1 household (otherwise). 
                     The simulation is run 1000 times. The black line illustrates the average spending across all simulations, while the purple band illustrates the range of spending paths from 90% of all observed simulation outcomes.")),
                 ),
                 tags$h4(HTML("See the paper (linked below) for details on the derivation of the multipliers and detailed exercises.")),
@@ -407,7 +409,7 @@ server <- function(input, output, session) {
       G1sum = G1
       
       for (i in 2:ROUNDS){
-        G1 <- append(G1,G1[i-1] * MPCZ[i-1])
+        G1 <- append(G1,G1[i-1] * MPCZ[i])
         G1sum <- append(G1sum,sum(G1))
       }
       
@@ -427,7 +429,7 @@ server <- function(input, output, session) {
     fig <- plot_ly(DF, x = ~RVEC, y = ~U95path, type = 'scatter', mode = 'lines',
                    line = list(color = 'purple'),
                    showlegend = FALSE, name = 'High 2014',
-                   hovertemplate = '<b>90% of Outcomes, Upper Value:</b> %{y:$,.4f} Billion<extra></extra>')
+                   hovertemplate = '<b>90% of Outcomes, Upper Value:</b> %{y:$,.2f} Billion<extra></extra>')
     fig <- fig %>% add_trace(y = ~L5path, type = 'scatter', mode = 'lines',
                              fill = 'tonexty', fillcolor='rgba(232,59,212,0.8)', line = list(color = 'purple'),
                              showlegend = FALSE, name = 'Low 2014',
@@ -463,450 +465,6 @@ server <- function(input, output, session) {
       config(modeBarButtonsToRemove = c('zoom2d', 'pan2d', 'resetScale2d', 'lasso2d','autoScale','select2d','zoomIn2d','zoomOut2d'))
     
   }) # end GAPlot
-  
-  
-######################################################
-  # Taxation Results:
-  reactive_TMPC1  <- reactive({ input$TMPC1 })
-  reactive_TMPC2  <- reactive({ input$TMPC2 })
-  reactive_DELTT  <- reactive({ input$DELTT })
-  reactive_TP2    <- reactive({ input$TP2 })
-  
-  output$TMULT1 <- renderText({ 
-    glue::glue("{round(-reactive_TMPC1()/(1 - reactive_TMPC1()),4)}")
-  })
-  
-  output$TMULT2 <- renderText({ 
-    glue::glue("{round(-reactive_TMPC2()/(1 - reactive_TMPC2()),4)}") 
-  })
-  
-  output$TPlot <- renderPlotly({
-    
-    TMPC1 <- reactive_TMPC1()
-    TMPC2 <- reactive_TMPC2()
-    DELTT <- reactive_DELTT()
-    
-    TMULT1 <- -TMPC1 / (1 - TMPC1)
-    TMULT2 <- -TMPC2 / (1 - TMPC2)
-    
-    ROUNDS = 20
-    RVEC = 1:ROUNDS
-    
-    T1 <- -DELTT * TMPC1^(1:(ROUNDS))
-    T1sum <- cumsum(T1)
-    T2 <- -DELTT * TMPC2^(1:(ROUNDS))
-    T2sum <- cumsum(T2)
-    
-    DF <- data.frame(RVEC,T1,T1sum,T2,T2sum)
-    
-    fig <- plot_ly(DF, x = ~RVEC, y = ~T1sum, type = 'scatter', mode = 'lines+markers',
-                   name = 'Cumulative Spending with MPC<sub>1</sub>',
-                   line = list(color = 'blue', width = 2, dash = 'solid'),
-                   marker = list(color = 'blue', size = 10),
-                   hovertemplate = '<b>Cumulative Spending with MPC<sub>1</sub>:</b> %{y:$,.4f} Billion<extra></extra>')
-    fig <- fig %>% add_trace(y = ~T1, mode = 'lines+markers',
-                             name = 'Round Spending with MPC<sub>1</sub>',
-                             line = list(color = 'grey', width = 1, dash = 'dash'),
-                             marker = list(color = 'darkblue', size = 10),
-                             hovertemplate = '<b>Round Spending with MPC<sub>1</sub>:</b> %{y:$,.4f} Billion<extra></extra>')
-    
-    if (TMPC2 != 0) {
-      fig <- fig %>% add_trace(y = ~T2sum, mode = 'lines+markers',
-                               name = 'Cumulative Spending with MPC<sub>2</sub>',
-                               line = list(color = 'red', width = 2, dash = 'solid'),
-                               marker = list(color = 'red', size = 10),
-                               hovertemplate = '<b>Cumulative Spending with MPC<sub>2</sub>:</b> %{y:$,.4f} Billion<extra></extra>')
-      fig <- fig %>% add_trace(y = ~T2,  mode = 'lines+markers',
-                               name = 'Round Spending with MPC<sub>1</sub>',
-                               line = list(color = 'grey', width = 1, dash = 'dash'),
-                               marker = list(color = 'darkred', size = 10),
-                               hovertemplate = '<b>Round Spending with MPC<sub>2</sub>:</b> %{y:$,.4f} Billion<extra></extra>')
-      fig <- fig %>%
-        layout(shapes = list(
-          list(
-            type = "line",
-            x0 = 0,
-            x1 = 21,
-            y0 = TMULT2*DELTT,
-            y1 = TMULT2*DELTT,
-            line = list(color = 'black', width = 1, dash = "dash")),
-          list(
-            type = "line",
-            x0 = 0,
-            x1 = 21,
-            y0 = TMULT1*DELTT,
-            y1 = TMULT1*DELTT,
-            line = list(color = 'black', width = 1, dash = "dash"))
-        ))
-    }
-    
-    fig <- fig %>%
-      layout(hovermode = 'x unified',
-             paper_bgcolor='white', plot_bgcolor='lightgrey',
-             title = list(text = "Cumulative and Individual Spending",
-                          x = 0, xanchor = "left", xref = "paper"),
-             xaxis = list(title = "Spending Round",
-                          gridcolor = 'white',
-                          showgrid = TRUE,
-                          showline = FALSE,
-                          showticklabels = TRUE,
-                          tickcolor = 'lightgrey',
-                          ticks = 'outside',
-                          zeroline = FALSE,
-                          tickvals = seq(1,20,1)),
-             yaxis = list(title = "Dollars (Billions)",
-                          gridcolor = 'white',
-                          showgrid = TRUE,
-                          showline = FALSE,
-                          showticklabels = TRUE,
-                          tickcolor = 'lightgrey',
-                          ticks = 'outside',
-                          zeroline = TRUE),
-             shapes = list(
-               list(type = "line",
-                    x0 = 0, x1 = 21,
-                    y0 = TMULT1*DELTT,
-                    y1 = TMULT1*DELTT,
-                    line = list(
-                      color = 'black', width = 1, dash = "dash"))))
-    
-    fig <- fig %>% 
-      config(modeBarButtonsToRemove = c('zoom2d', 'pan2d', 'resetScale2d', 'lasso2d','autoScale','select2d','zoomIn2d','zoomOut2d'))
-    
-    
-  }) # end Tplot
-  
-  output$TmultTable <- renderDT({
-    
-    TMPC1 <- reactive_TMPC1()
-    TMPC2 <- reactive_TMPC2()
-    DELTT <- reactive_DELTT()
-    
-    TMULT1 <- -TMPC1 / (1 - TMPC1)
-    TMULT2 <- -TMPC2 / (1 - TMPC2)
-    
-    ROUNDS = 100
-    RVEC = 1:ROUNDS
-    
-    T1 <- -DELTT * TMPC1^(1:(ROUNDS))
-    T1sum <- cumsum(T1)
-    T2 <- -DELTT * TMPC2^(1:(ROUNDS))
-    T2sum <- cumsum(T2)
-    
-    datatable(data.frame(round(T1,4),round(T1sum,4),round(T2,4),round(T2sum,4)),
-              colnames = c("Round Spending with MPC\U2081", "Cumulated Spending with MPC\U2081", "Round Spending with MPC\U2082", "Cumulated Spending with MPC\U2082"))
-    
-  })
-  
-  output$TAPlot <- renderPlotly({
-    
-    TMPC1 <- reactive_TMPC1()
-    TMPC2 <- reactive_TMPC2()
-    TP2 <-   reactive_TP2()
-    DELTT <- reactive_DELTT()
-    
-    ROUNDS = 20
-    RVEC = 1:ROUNDS
-    SIMS = 1000
-    RESIND = NULL
-    RESSUM = NULL
-    
-    for (j in 1:SIMS){
-      
-      TMPCZ = sample(c(TMPC1,TMPC2), ROUNDS, replace = TRUE, prob = c(100-TP2,TP2))
-      T1 = -DELTT * TMPCZ[1]
-      T1sum = T1
-      
-      for (i in 2:ROUNDS){
-        
-        T1 <- append(T1,T1[i-1] * TMPCZ[i])
-        T1sum <- append(T1sum,sum(T1))
-        
-      }
-      
-      RESIND = rbind(RESIND,T1)
-      RESSUM = rbind(RESSUM,T1sum)
-    }
-    
-    Meanpath <- colMeans(RESSUM)
-    Maxpath <- apply(RESSUM, 2, function(x) max(x, na.rm = TRUE))
-    U95path <- apply(RESSUM, 2, function(x) quantile(x, 0.95, na.rm = TRUE))
-    Minpath <- apply(RESSUM, 2, function(x) min(x, na.rm = TRUE))
-    L5path <- apply(RESSUM, 2, function(x) quantile(x, 0.05, na.rm = TRUE))
-    
-    DF <- data.frame(RVEC,Meanpath,U95path,L5path)
-    
-    fig <- plot_ly(DF, x = ~RVEC, y = ~U95path, type = 'scatter', mode = 'lines',
-                   line = list(color = 'green'),
-                   showlegend = FALSE, name = 'High 2014',
-                   hovertemplate = '<b>90% of Outcomes, Upper Value:</b> %{y:$,.4f} Billion<extra></extra>')
-    fig <- fig %>% add_trace(y = ~L5path, type = 'scatter', mode = 'lines',
-                             fill = 'tonexty', fillcolor='rgba(0,255,0,0.4)', line = list(color = 'green'),
-                             showlegend = FALSE, name = 'Low 2014',
-                             hovertemplate = '<b>90% of Outcomes, Lower Value:</b> %{y:$,.4f} Billion<extra></extra>')
-    fig <- fig %>% add_trace(y = ~Meanpath, mode = 'lines+markers',
-                             line = list(color = 'black', width = 2, dash = 'solid'),
-                             marker = list(color = 'black', size = 10),
-                             hovertemplate = '<b>Average Outcome of Simulations:</b> %{y:$,.4f} Billion<extra></extra>')
-    fig <- fig %>%
-      layout(hovermode = 'x unified',
-             paper_bgcolor='white', plot_bgcolor='lightgrey',
-             title = list(text = "Cumulative Spending (from 1000 Simulations)",
-                          x = 0, xanchor = "left", xref = "paper"),
-             xaxis = list(title = "Spending Round",
-                          gridcolor = 'white',
-                          showgrid = TRUE,
-                          showline = FALSE,
-                          showticklabels = TRUE,
-                          tickcolor = 'lightgrey',
-                          ticks = 'outside',
-                          zeroline = FALSE,
-                          tickvals = seq(1,20,1)),
-             yaxis = list(title = "Dollars (Billions)",
-                          gridcolor = 'white',
-                          showgrid = TRUE,
-                          showline = FALSE,
-                          showticklabels = TRUE,
-                          tickcolor = 'lightgrey',
-                          ticks = 'outside',
-                          zeroline = TRUE))
-    
-    fig <- fig %>% 
-      config(modeBarButtonsToRemove = c('zoom2d', 'pan2d', 'resetScale2d', 'lasso2d','autoScale','select2d','zoomIn2d','zoomOut2d'))
-    
-    
-  }) # end TAPlot
-
-####################################################
-  # Both Results
-  reactive_BMPC1  <- reactive({ input$BMPC1 })
-  reactive_BMPC2  <- reactive({ input$BMPC2 })
-  reactive_BDELTG  <- reactive({ input$BDELTG })
-  reactive_BDELTT  <- reactive({ input$BDELTT })
-  reactive_BP2    <- reactive({ input$BP2 })
-  
-  output$BGMULT1 <- renderText({ 
-    glue::glue("{round(1/(1 - reactive_BMPC1()),4)}")
-  })
-  
-  output$BTMULT1 <- renderText({ 
-    glue::glue("{round(-reactive_BMPC1()/(1 - reactive_BMPC1()),4)}")
-  })
-  
-  output$BGMULT2 <- renderText({ 
-    glue::glue("{round(1/(1 - reactive_BMPC2()),2)}") 
-  })
-  
-  output$BTMULT2 <- renderText({ 
-    glue::glue("{round(-reactive_BMPC2()/(1 - reactive_BMPC2()),2)}") 
-  })
-  
-  output$BmultPlot <- renderPlotly({
-    
-    BMPC1 <- reactive_BMPC1()
-    BMPC2 <- reactive_BMPC2()
-    BDELTG <- reactive_BDELTG()
-    BDELTT <- reactive_BDELTT()
-    
-    BTOT1 <- 1 / (1 - BMPC1) * BDELTG - BMPC1 / (1 - BMPC1) * BDELTT
-    B1i = BDELTG - BMPC1 * BDELTT
-    
-    BTOT2 <- 1 / (1 - BMPC2) * BDELTG - BMPC2 / (1 - BMPC2) * BDELTT
-    B2i = BDELTG - BMPC2 * BDELTT
-    
-    ROUNDS = 20
-    RVEC = 1:ROUNDS
-    
-    B1 <- B1i * BMPC1^(0:(ROUNDS-1))
-    B1sum <- cumsum(B1)
-    B2 <- B2i * BMPC2^(0:(ROUNDS-1))
-    B2sum <- cumsum(B2)
-    
-    DF <- data.frame(RVEC,B1,B1sum,B2,B2sum)
-    
-    fig <- plot_ly(DF, x = ~RVEC, y = ~B1sum, type = 'scatter', mode = 'lines+markers',
-                   name = 'Cumulative Spending with MPC<sub>1</sub>',
-                   line = list(color = 'blue', width = 2, dash = 'solid'),
-                   marker = list(color = 'blue', size = 10),
-                   hovertemplate = '<b>Cumulative Spending with MPC<sub>1</sub>:</b> %{y:$,.4f} Billion<extra></extra>')
-    fig <- fig %>% add_trace(y = ~B1, mode = 'lines+markers',
-                             name = 'Round Spending with MPC<sub>1</sub>',
-                             line = list(color = 'grey', width = 1, dash = 'dash'),
-                             marker = list(color = 'darkblue', size = 10),
-                             hovertemplate = '<b>Round Spending with MPC<sub>1</sub>:</b> %{y:$,.4f} Billion<extra></extra>')
-    
-    if (BMPC2 != 0) {
-      fig <- fig %>% add_trace(y = ~B2sum, mode = 'lines+markers',
-                               name = 'Cumulative Spending with MPC<sub>2</sub>',
-                               line = list(color = 'red', width = 2, dash = 'solid'),
-                               marker = list(color = 'red', size = 10),
-                               hovertemplate = '<b>Cumulative Spending with MPC<sub>2</sub>:</b> %{y:$,.4f} Billion<extra></extra>')
-      fig <- fig %>% add_trace(y = ~B2,  mode = 'lines+markers',
-                               name = 'Round Spending with MPC<sub>1</sub>',
-                               line = list(color = 'grey', width = 1, dash = 'dash'),
-                               marker = list(color = 'darkred', size = 10),
-                               hovertemplate = '<b>Round Spending with MPC<sub>2</sub>:</b> %{y:$,.4f} Billion<extra></extra>')
-      fig <- fig %>%
-        layout(shapes = list(
-          list(
-            type = "line",
-            x0 = 0,
-            x1 = 21,
-            y0 = BTOT2,
-            y1 = BTOT2,
-            line = list(color = 'black', width = 1, dash = "dash")),
-          list(
-            type = "line",
-            x0 = 0,
-            x1 = 21,
-            y0 = BTOT1,
-            y1 = BTOT1,
-            line = list(color = 'black', width = 1, dash = "dash"))
-        ))
-    }
-    
-    fig <- fig %>%
-      layout(hovermode = 'x unified',
-             paper_bgcolor='white', plot_bgcolor='lightgrey',
-             title = list(text = "Cumulative and Individual Spending",
-                          x = 0, xanchor = "left", xref = "paper"),
-             xaxis = list(title = "Spending Round",
-                          gridcolor = 'white',
-                          showgrid = TRUE,
-                          showline = FALSE,
-                          showticklabels = TRUE,
-                          tickcolor = 'lightgrey',
-                          ticks = 'outside',
-                          zeroline = FALSE,
-                          tickvals = seq(1,20,1)),
-             yaxis = list(title = "Dollars (Billions)",
-                          gridcolor = 'white',
-                          showgrid = TRUE,
-                          showline = FALSE,
-                          showticklabels = TRUE,
-                          tickcolor = 'lightgrey',
-                          ticks = 'outside',
-                          zeroline = TRUE),
-             shapes = list(
-               list(type = "line",
-                    x0 = 0, x1 = 21,
-                    y0 = BTOT1,
-                    y1 = BTOT1,
-                    line = list(
-                      color = 'black', width = 1, dash = "dash"))))
-    
-    fig <- fig %>% 
-      config(modeBarButtonsToRemove = c('zoom2d', 'pan2d', 'resetScale2d', 'lasso2d','autoScale','select2d','zoomIn2d','zoomOut2d'))
-    
-  }) # end Bmultplot
-  
-  output$BmultTable <- renderDT({
-    
-    BMPC1 <- reactive_BMPC1()
-    BMPC2 <- reactive_BMPC2()
-    BDELTG <- reactive_BDELTG()
-    BDELTT <- reactive_BDELTT()
-    
-    BTOT1 <- 1 / (1 - BMPC1) * BDELTG - BMPC1 / (1 - BMPC1) * BDELTT
-    B1i = BDELTG - BMPC1 * BDELTT
-    
-    BTOT2 <- 1 / (1 - BMPC2) * BDELTG - BMPC2 / (1 - BMPC2) * BDELTT
-    B2i = BDELTG - BMPC2 * BDELTT
-    
-    ROUNDS = 100
-    RVEC = 1:ROUNDS
-    
-    B1 <- B1i * BMPC1^(0:(ROUNDS-1))
-    B1sum <- cumsum(B1)
-    B2 <- B2i * BMPC2^(0:(ROUNDS-1))
-    B2sum <- cumsum(B2)
-    
-    datatable(data.frame(round(B1,4),round(B1sum,4),round(B2,4),round(B2sum,4)),
-              colnames = c("Round Spending with MPC\U2081", "Cumulated Spending with MPC\U2081", "Round Spending with MPC\U2082", "Cumulated Spending with MPC\U2082"))
-    
-  })
-  
-  output$BaggPlot <- renderPlotly({
-    
-    BMPC1 <- reactive_BMPC1()
-    BMPC2 <- reactive_BMPC2()
-    BP2 <-   reactive_BP2()
-    
-    BDELTG <- reactive_BDELTG()
-    BDELTT <- reactive_BDELTT()
-    
-    ROUNDS = 20
-    RVEC = 1:ROUNDS
-    
-    SIMS = 1000
-    RESIND = NULL
-    RESSUM = NULL
-    
-    for (j in 1:SIMS){
-      
-      BMPCZ = sample(c(BMPC1,BMPC2), ROUNDS, replace = TRUE, prob = c(100-BP2,BP2))
-      B1 = BDELTG - BMPCZ[1] * BDELTT
-      B1sum = B1
-      
-      for (i in 2:ROUNDS){
-        
-        B1 <- append(B1,B1[i-1] * BMPCZ[i])
-        B1sum <- append(B1sum,sum(B1))
-        
-      }
-      
-      RESIND = rbind(RESIND,B1)
-      RESSUM = rbind(RESSUM,B1sum)
-      
-    }
-    
-    Meanpath <- colMeans(RESSUM)
-    Maxpath <- apply(RESSUM, 2, function(x) max(x, na.rm = TRUE))
-    U95path <- apply(RESSUM, 2, function(x) quantile(x, 0.95, na.rm = TRUE))
-    Minpath <- apply(RESSUM, 2, function(x) min(x, na.rm = TRUE))
-    L5path <- apply(RESSUM, 2, function(x) quantile(x, 0.05, na.rm = TRUE))
-    
-    DF <- data.frame(RVEC,Meanpath,U95path,L5path)
-    fig <- plot_ly(DF, x = ~RVEC, y = ~U95path, type = 'scatter', mode = 'lines',
-                   line = list(color = 'green'),
-                   showlegend = FALSE, name = 'High 2014',
-                   hovertemplate = '<b>90% of Outcomes, Upper Value:</b> %{y:$,.4f} Billion<extra></extra>')
-    fig <- fig %>% add_trace(y = ~L5path, type = 'scatter', mode = 'lines',
-                             fill = 'tonexty', fillcolor='rgba(0,255,0,0.4)', line = list(color = 'green'),
-                             showlegend = FALSE, name = 'Low 2014',
-                             hovertemplate = '<b>90% of Outcomes, Lower Value:</b> %{y:$,.4f} Billion<extra></extra>')
-    fig <- fig %>% add_trace(y = ~Meanpath, mode = 'lines+markers',
-                             line = list(color = 'black', width = 2, dash = 'solid'),
-                             marker = list(color = 'black', size = 10),
-                             hovertemplate = '<b>Average Outcome of Simulations:</b> %{y:$,.4f} Billion<extra></extra>')
-    fig <- fig %>%
-      layout(hovermode = 'x unified',
-             paper_bgcolor='white', plot_bgcolor='lightgrey',
-             title = list(text = "Cumulative Spending (from 1000 Simulations)",
-                          x = 0, xanchor = "left", xref = "paper"),
-             xaxis = list(title = "Spending Round",
-                          gridcolor = 'white',
-                          showgrid = TRUE,
-                          showline = FALSE,
-                          showticklabels = TRUE,
-                          tickcolor = 'lightgrey',
-                          ticks = 'outside',
-                          zeroline = FALSE,
-                          tickvals = seq(1,20,1)),
-             yaxis = list(title = "Dollars (Billions)",
-                          gridcolor = 'white',
-                          showgrid = TRUE,
-                          showline = FALSE,
-                          showticklabels = TRUE,
-                          tickcolor = 'lightgrey',
-                          ticks = 'outside',
-                          zeroline = TRUE))
-    
-    fig <- fig %>% 
-      config(modeBarButtonsToRemove = c('zoom2d', 'pan2d', 'resetScale2d', 'lasso2d','autoScale','select2d','zoomIn2d','zoomOut2d'))
-    
-    
-  }) # end BaggPlot
   
 }
 

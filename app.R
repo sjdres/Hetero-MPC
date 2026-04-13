@@ -132,25 +132,25 @@ ui <- page_navbar(
       layout_column_wrap(
         value_box( 
           tags$h1(HTML("Type 1 &Delta;G Multiplier:")),
-          p(HTML("Equation: <sup>1</sup>&frasl;<sub>(1 - MPC<sub>1</sub>)</sub>")),
+          p(HTML("Eq: <sup>1</sup>&frasl;<sub>(1 - MPC<sub>1</sub>)</sub>")),
           value = uiOutput("GMULT1", inline = TRUE),
           theme = "bg-gradient-blue-red"
         ),
         value_box( 
           tags$h1(HTML("Type 1 &Delta;T Multiplier:")),
-          p(HTML("Equation: <sup>MPC<sub>1</sub></sup>&frasl;<sub>(1 - MPC<sub>1</sub>)</sub>")),
+          p(HTML("Eq: <sup>MPC<sub>1</sub></sup>&frasl;<sub>(1 - MPC<sub>1</sub>)</sub>")),
           value = uiOutput("TMULT1F", inline = TRUE),
           theme = "bg-gradient-blue-red"
         ),
         value_box( 
           tags$h1(HTML("Type 2 &Delta;G Multiplier:")), 
-          p(HTML("Equation: <sup>1</sup>&frasl;<sub>(1 - MPC<sub>2</sub>)</sub>")),
+          p(HTML("Eq: <sup>1</sup>&frasl;<sub>(1 - MPC<sub>2</sub>)</sub>")),
           value = uiOutput("GMULT2", inline = TRUE),
           theme = "bg-gradient-red-blue"
         ),
         value_box( 
           tags$h1(HTML("Type 2 &Delta;T Multiplier:")), 
-          p(HTML("Equation: <sup>MPC<sub>2</sub></sup>&frasl;<sub>(1 - MPC<sub>2</sub>)</sub>")),
+          p(HTML("Eq: <sup>MPC<sub>2</sub></sup>&frasl;<sub>(1 - MPC<sub>2</sub>)</sub>")),
           value = uiOutput("TMULT2F", inline = TRUE),
           theme = "bg-gradient-red-blue"
         ),

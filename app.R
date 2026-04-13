@@ -156,7 +156,7 @@ ui <- page_navbar(
         ),
         fill = FALSE,
         width = "150px",
-        height = "100px"
+        height = "20vh"
       ),
       
   ), # end nav_panel
@@ -244,8 +244,20 @@ server <- function(input, output, session) {
   
   reactive_MPC1  <- reactive({ 1-sum(c(input$MTR/100, input$MPI1, input$MPS1)) })
   reactive_MPC2  <- reactive({ 1-sum(c(input$MTR/100, input$MPI2, input$MPS2)) })
-  reactive_DELTG <- reactive({ input$DELTG })
-  reactive_DELTT <- reactive({ input$DELTT })
+  reactive_DELTG <- reactive({ 
+    if (is.na(input$DELTG)) {
+      0
+    } else {
+      input$DELTG
+    }
+  })
+  reactive_DELTT <- reactive({ 
+    if (is.na(input$DELTT)) {
+      0
+    } else {
+      input$DELTT
+    }
+  })
   reactive_P2    <- reactive({ input$P2 })
   
   output$GMULT1 <- renderText({
